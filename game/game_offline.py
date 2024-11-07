@@ -14,10 +14,14 @@ class Game_offline:
         self.time_white = 1200  # 20 phút (1200 giây)
         self.time_black = 1200
         self.turn_start_time = pygame.time.get_ticks()
+        # Âm thanh trò chơi
+        self.move_sound = pygame.mixer.Sound("sounds/move.wav")
+        self.select_sound = pygame.mixer.Sound("sounds/capture.wav")
 
     def play_turn(self, start_pos, end_pos):
         if end_pos in self.valid_moves:
             self.board.move_piece(start_pos, end_pos)
+            self.move_sound.play()
             self.valid_moves = []
             self.switch_turn()
             self.graphics.draw_initial_board()  # Vẽ lại bàn cờ ngay sau nước đi
@@ -102,6 +106,7 @@ class Game_offline:
         if piece and piece.get_color() == self.board.current_turn:
             self.selected_square = position
             self.valid_moves = piece.get_safe_moves(self.board, position)
+            self.select_sound.play()
         else:
             self.selected_square = None
             self.valid_moves = []

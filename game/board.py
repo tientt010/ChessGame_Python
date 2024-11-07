@@ -21,7 +21,6 @@ class Board:
     def __init__(self):
         self.board = self.create_board()
         self.current_turn = 'w'
-
     def create_board(self):
         # Khởi tạo bàn cờ với các quân cờ ở vị trí ban đầu
         board = [
@@ -51,9 +50,10 @@ class Board:
     def move_piece(self, start_pos, end_pos):
         # Di chuyển quân cờ từ vị trí start_pos đến end_pos
         piece = self.get_piece(start_pos)
-            
+        
         self.board[end_pos[0]][end_pos[1]].set_piece(piece)
         self.board[start_pos[0]][start_pos[1]].set_piece(None)
+
         # Hoán thành
         if isinstance(piece,King) and abs(end_pos[1]-start_pos[1])>1 :
             self.castle(start_pos,end_pos)

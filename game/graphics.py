@@ -6,7 +6,7 @@ pygame.init()
 class Graphics:
     def __init__(self, board):
         self.board = board
-        self.window = pygame.display.set_mode((WIDTH + 200, HEIGHT), pygame.DOUBLEBUF)
+        self.window = pygame.display.set_mode((WIDTH + 200, HEIGHT), pygame.DOUBLEBUF | pygame.SRCALPHA)
         pygame.display.set_caption("Chess Game")
         self.load_images()
         self.clock = pygame.time.Clock()
@@ -19,9 +19,11 @@ class Graphics:
         self.images = {}
         pieces = ['wP', 'bP', 'wR', 'bR', 'wN', 'bN', 'wB', 'bB', 'wQ', 'bQ', 'wK', 'bK']
         for piece in pieces:
-            self.images[piece] = pygame.transform.scale(
-                pygame.image.load(IMAGE_PATH + piece + ".png"),
-                (SQUARE_SIZE, SQUARE_SIZE)
+            # Tải hình ảnh và áp dụng convert_alpha() để hỗ trợ độ nét và trong suốt
+            original_image = pygame.image.load(IMAGE_PATH + piece + ".png").convert_alpha()
+            # Chỉnh kích thước để vừa với ô vuông trên bàn cờ
+            self.images[piece] = pygame.transform.smoothscale(
+                original_image, (SQUARE_SIZE, SQUARE_SIZE)
             )
 
     def draw_board(self):
@@ -45,23 +47,46 @@ class Graphics:
     def draw_initial_board(self):
         self.draw_board()
         self.draw_pieces()
-        #self.draw_timer_box()
+        black_rect = pygame.Rect(WIDTH, 0, 200, HEIGHT // 2)  # Nửa trên
+        white_rect = pygame.Rect(WIDTH, HEIGHT // 2, 200, HEIGHT // 2)  # Nửa dưới
+        pygame.draw.rect(self.window, (0, 0, 0), black_rect)
+        pygame.draw.rect(self.window, (255, 255, 255), white_rect)
         pygame.display.flip()
 
     def draw_timer_box(self):
-        pygame.draw.rect(self.window, (169, 169, 169), (800, 0, 200, 800))
+        
+        white_timer_rect = pygame.Rect(WIDTH + 50, HEIGHT - 230, 100, 60)
+        pygame.draw.rect(self.window, (255, 255, 255), white_timer_rect)  # Nền màu trắng
+        #pygame.draw.rect(self.window, (255, 255, 255), white_timer_rect, 2)  # Viền màu trắng
+
+        
+        black_timer_rect = pygame.Rect(WIDTH + 50, 170, 100, 60)
+        pygame.draw.rect(self.window, (0,0,0), black_timer_rect)
+        #pygame.draw.rect(self.window, (255, 255, 255), black_timer_rect, 2)
+
+
+
 
     def draw_timers(self, time_white, time_black):
-        # Tạo text căn giữa
-        white_time_text = self.font.render(f"White: {time_white // 60:02}:{time_white % 60:02}", True, (255, 255, 255))
-        black_time_text = self.font.render(f"Black: {time_black // 60:02}:{time_black % 60:02}", True, (255, 255, 255))
+       
+        # Phông chữ nhỏ hơn cho đồng hồ
+        small_font = pygame.font.SysFont(None, 50)  # Đặt kích thước phông chữ nhỏ hơn cho phù hợp với ô đồng hồ
 
-        white_text_rect = white_time_text.get_rect(center=(900, 600))  # Căn giữa tại tọa độ
-        black_text_rect = black_time_text.get_rect(center=(900, 100))
+        # Tạo text thời gian cho quân trắng và đen
+        white_time_text = small_font.render(f"{time_white // 60}:{time_white % 60:02}", True, (0, 0, 0))
+        black_time_text = small_font.render(f"{time_black // 60}:{time_black % 60:02}", True, (255, 255, 255))
 
+        # Đặt vị trí text thời gian để căn giữa trong các ô đồng hồ
+        white_text_rect = white_time_text.get_rect(center=(WIDTH + 100, HEIGHT - 200))  
+        black_text_rect = black_time_text.get_rect(center=(WIDTH + 100, 200))            
+
+        # Vẽ text lên cửa sổ
         self.window.blit(white_time_text, white_text_rect)
         self.window.blit(black_time_text, black_text_rect)
-        pygame.display.update(800, 0, 200, 800)
+
+        # Cập nhật phần hiển thị của các ô đồng hồ
+        pygame.display.update(WIDTH, 0, 200, HEIGHT)
+
 
     def highlight_square(self, position, highlight_type='piece'):
         if position:
