@@ -15,8 +15,8 @@ class Game_offline:
         self.time_black = 1200
         self.turn_start_time = pygame.time.get_ticks()
         # Âm thanh trò chơi
-        self.move_sound = pygame.mixer.Sound("sounds/move.wav")
-        self.select_sound = pygame.mixer.Sound("sounds/capture.wav")
+        self.move_sound = pygame.mixer.Sound("game/sounds/move.wav")
+        self.select_sound = pygame.mixer.Sound("game/sounds/capture.wav")
 
     def play_turn(self, start_pos, end_pos):
         if end_pos in self.valid_moves:
