@@ -13,7 +13,7 @@ DARK_BROWN = (181, 136, 99)
 HIGHLIGHT_COLOR = (0, 255, 0)  # Màu để làm nổi bật các nước đi hợp lệ
 
 # Đường dẫn thư mục ảnh
-IMAGE_PATH = "game/images/"  # Đảm bảo đường dẫn này đúng
+IMAGE_PATH = "game/images/"  
 # SQUARE_SIZE = 64  # Hoặc kích thước ô cờ bạn sử dụng
 FPS = 30
 

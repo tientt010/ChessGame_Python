@@ -85,9 +85,6 @@ class Board:
         return False
 
     def is_checkmate(self, color):
-        # Kiểm tra nếu màu 'color' đang bị chiếu hết
-        if not self.is_check(color):
-            return False
         # Kiểm tra nếu không còn nước đi nào hợp lệ
         for row in range(ROWS):
             for col in range(COLS):
@@ -96,7 +93,9 @@ class Board:
                     moves = piece.get_safe_moves(self,(row,col))
                     if len(moves)>0 :
                         return False
-        return True
+        if self.is_check(color) :
+            return "win"
+        else: return "draw"
 
     def find_king(self, color):
         # Tìm vị trí của quân Vua màu 'color'

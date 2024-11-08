@@ -10,8 +10,7 @@ class Graphics:
         pygame.display.set_caption("Chess Game")
         self.load_images()
         self.clock = pygame.time.Clock()
-        # Sử dụng phông chữ có sẵn "Comic Sans MS" hoặc "Arial Rounded MT Bold"
-        self.font = pygame.font.SysFont(None, 24)  # Chọn font sinh động
+        self.font = pygame.font.SysFont(None, 24)
         self.running = True
         self.draw_initial_board()
 

@@ -10,7 +10,7 @@ class Game_offline:
         self.graphics = Graphics(self.board)
         self.selected_square = None
         self.valid_moves = []
-        self.game_over = False
+        self.game_end = False
         self.time_white = 1200  # 20 phút (1200 giây)
         self.time_black = 1200
         self.turn_start_time = pygame.time.get_ticks()
@@ -25,10 +25,16 @@ class Game_offline:
             self.valid_moves = []
             self.switch_turn()
             self.graphics.draw_initial_board()  # Vẽ lại bàn cờ ngay sau nước đi
-            if self.board.is_checkmate(self.board.current_turn):
-                self.game_over = True
-                print(f"{'White player' if self.board.current_turn == 'b' else 'Black player'} wins!")
-                self.graphics.running = False
+            check_mate=self.board.is_checkmate(self.board.current_turn)
+            if check_mate:
+                if check_mate == "win":
+                    self.game_end = True
+                    print(f"{'White player' if self.board.current_turn == 'b' else 'Black player'} wins!")
+                    self.graphics.running = False
+                else :
+                    self.game_end = True
+                    print("draw!")
+                    self.graphics.running = False
                 return True
         return False
 
@@ -38,19 +44,19 @@ class Game_offline:
         self.board.current_turn = 'b' if self.board.current_turn == 'w' else 'w'
 
     def update_timer(self):
-        while not self.game_over:
+        while not self.game_end:
             current_time = pygame.time.get_ticks()
             elapsed_time = (current_time - self.turn_start_time) // 1000
             if self.board.current_turn == 'w':
                 self.time_white -= elapsed_time
                 if self.time_white <= 0:
                     self.time_white = 0
-                    self.game_over = True
+                    self.game_end = True
             else:
                 self.time_black -= elapsed_time
                 if self.time_black <= 0:
                     self.time_black = 0
-                    self.game_over = True
+                    self.game_end = True
             self.turn_start_time = current_time
             pygame.time.wait(1000)
 
@@ -65,7 +71,7 @@ class Game_offline:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                    self.game_over = True
+                    self.game_end = True
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
                     clicked_square = self.graphics.get_square_under_mouse(mouse_pos)
@@ -79,7 +85,7 @@ class Game_offline:
                             if clicked_square in self.valid_moves:
                                 if self.play_turn(self.selected_square, clicked_square):
                                     running = False
-                                    self.game_over = True
+                                    self.game_end = True
                                 self.selected_square = None
                             else:
                                 # Nếu nhấp vào ô không hợp lệ, chọn lại quân cờ mới
