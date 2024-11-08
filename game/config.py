@@ -14,6 +14,8 @@ HIGHLIGHT_COLOR = (0, 255, 0)  # Màu để làm nổi bật các nước đi h�
 
 # Đường dẫn thư mục ảnh
 IMAGE_PATH = "game/images/"  
+# Đường dẫn thư mục âm thanh
+SOUND_PATH = "game/sounds"
 # SQUARE_SIZE = 64  # Hoặc kích thước ô cờ bạn sử dụng
 FPS = 30
 
