@@ -1,5 +1,5 @@
 # pieces.py
-from game.utils import*
+from logic.utils import*
 class Piece:
     def __init__(self, color):
         self.color = color  # Màu của quân cờ: 'w' (trắng) hoặc 'b' (đen)
@@ -15,6 +15,9 @@ class Piece:
         raise NotImplementedError("Phương thức này cần được ghi đè trong lớp con.")
     def get_safe_moves(self,board,position):
         return [move for move in self.get_valid_moves(board,position) if is_safe_move(board,self,position,move)]
+    
+    def can_atack(self,board, position, target_pos):
+        return target_pos in self.get_valid_moves(board, position) 
        
 
 class Pawn(Piece):
@@ -44,6 +47,10 @@ class Pawn(Piece):
 
 
 class Rook(Piece):
+    def __init__(self, color):
+        super().__init__(color)
+        self.has_move = False
+
     def get_valid_moves(self, board, position):
         moves = []
         row, col = position
@@ -113,6 +120,9 @@ class Queen(Piece):
 
 
 class King(Piece):
+    def __init__(self, color):
+        super().__init__(color)
+        self.has_move = False
     def get_valid_moves(self, board, position):
         moves = []
         row, col = position
@@ -126,20 +136,14 @@ class King(Piece):
             if board.is_within_bounds((r, c)):
                 if (board.is_empty((r, c)) or board.get_piece((r, c)).get_color() != self.color) :
                     moves.append((r, c))
-
-        moves=moves+self.can_castle(board,position)
         return moves
-    # Logic nhập thành nếu có thể
-    def can_castle(self,board,position):
-        start_row=(0 if self.color =='b' else 7)
-        castle = []
-        if position != (start_row,4) :
-            return castle 
-        piece = board.get_piece((start_row,0))
-        if isinstance(piece ,Rook) and piece.get_color()==self.color and all(board.is_empty((start_row,i)) for i in range(1,4)):
-            castle.append((start_row,2))
-        piece = board.get_piece((start_row,7))
-        if isinstance(piece ,Rook) and piece.get_color()==self.color and all(board.is_empty((start_row,i)) for i in range(5,7)):
-            castle.append((start_row,6))
-        return castle
-        
+    
+    def get_safe_moves(self, board, position):
+        castle_moves = []
+
+        if can_left_castle(board, position, self.color,self.has_move):
+            castle_moves.append((position[0], 2))
+        if can_right_castle(board, position, self.color,self.has_move):
+            castle_moves.append((position[0], 6))
+        return super().get_safe_moves(board, position)+castle_moves 
+    

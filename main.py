@@ -1,4 +1,4 @@
-# main.py
+    # main.py
 from game.game_opption import GameOpption
 from game.game_offline import Game_offline  
 # from game_online import Game_online

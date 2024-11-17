@@ -1,7 +1,7 @@
 # board.py
 
-from game.config import *
-from game.pieces import Pawn, Rook, Knight, Bishop, Queen, King
+from config import *
+from logic.pieces import Pawn, Rook, Knight, Bishop, Queen, King
 import inspect
 class Box:
     def __init__(self, piece=None):
@@ -21,17 +21,18 @@ class Board:
     def __init__(self):
         self.board = self.create_board()
         self.current_turn = 'w'
+        self.move_list = []
     def create_board(self):
         # Khởi tạo bàn cờ với các quân cờ ở vị trí ban đầu
         board = [
-            [Box(Rook("b")), Box(Knight("b")), Box(Bishop("b")), Box(Queen("b")), Box(King("b")), Box(Bishop("b")), Box(Knight("b")), Box(Rook("b"))],
-            [Box(Pawn("b")) for _ in range(8)],
-            [Box() for _ in range(8)],
-            [Box() for _ in range(8)],
-            [Box() for _ in range(8)],
-            [Box() for _ in range(8)],
-            [Box(Pawn("w")) for _ in range(8)],
-            [Box(Rook("w")), Box(Knight("w")), Box(Bishop("w")), Box(Queen("w")), Box(King("w")), Box(Bishop("w")), Box(Knight("w")), Box(Rook("w"))]
+                [Box(Rook("b")), Box(Knight("b")), Box(Bishop("b")), Box(Queen("b")), Box(King("b")), Box(Bishop("b")), Box(Knight("b")), Box(Rook("b"))],
+                [Box(Pawn("b")) for _ in range(8)],
+                [Box() for _ in range(8)],
+                [Box() for _ in range(8)],
+                [Box() for _ in range(8)],
+                [Box() for _ in range(8)],
+                [Box(Pawn("w")) for _ in range(8)],
+                [Box(Rook("w")), Box(Knight("w")), Box(Bishop("w")), Box(Queen("w")), Box(King("w")), Box(Bishop("w")), Box(Knight("w")), Box(Rook("w"))]
         ]
         return board
 
@@ -46,8 +47,14 @@ class Board:
     def is_empty(self, position):
         row, col = position
         return self.board[row][col].is_empty()
+    
+    def is_rook(self, piece):
+        return isinstance(piece,Rook)
+    
+    def is_king(self, piece):
+        return isinstance(piece, King)
 
-    def move_piece(self, start_pos, end_pos):
+    def move_piece(self, start_pos, end_pos, fake_move=False):
         # Di chuyển quân cờ từ vị trí start_pos đến end_pos
         piece = self.get_piece(start_pos)
         
@@ -62,6 +69,11 @@ class Board:
             self.board[end_pos[0]][end_pos[1]].set_piece(Queen(piece.get_color()))
             if inspect.currentframe().f_back.f_code.co_name == "is_safe_move":
                 self.board[end_pos[0]][end_pos[1]].set_piece(Pawn(piece.get_color()))
+        if fake_move:
+            return
+        self.move_list.append((start_pos,end_pos))
+        if isinstance(piece,(King, Rook)):
+            piece.has_move=True
     
     # Xử lý phép hoán thành
     def castle(self,start_pos,end_pos):
@@ -71,7 +83,7 @@ class Board:
         else:
             Rook_start_pos=(start_pos[0],(3 if end_pos[1]>start_pos[1] else 5))
             Rook_end_pos=(start_pos[0],(0 if end_pos[1]>start_pos[1] else 7))
-        self.move_piece(Rook_start_pos,Rook_end_pos)
+        self.move_piece(Rook_start_pos,Rook_end_pos,True)
     def is_check(self, color):
         # Kiểm tra nếu vua của màu 'color' đang bị chiếu
         king_pos = self.find_king(color)
