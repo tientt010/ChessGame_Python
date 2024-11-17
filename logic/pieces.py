@@ -6,6 +6,9 @@ class Piece:
 
     def get_color(self):
         return self.color
+    
+    def get_type(self):
+        return self.__class__.__name__.lower() # trả về tên lớp, ví dụ 'pawn', 'king'
 
     def get_valid_moves(self, board, position):
         """
@@ -21,6 +24,11 @@ class Piece:
        
 
 class Pawn(Piece):
+    def init(self, color):
+        super().__init__(color)
+
+    def get_type(self):
+        return 'P'
     def get_valid_moves(self, board, position):
         moves = []
         row, col = position
@@ -51,6 +59,9 @@ class Rook(Piece):
         super().__init__(color)
         self.has_move = False
 
+    def get_type(self):
+        return 'R'
+
     def get_valid_moves(self, board, position):
         moves = []
         row, col = position
@@ -73,6 +84,12 @@ class Rook(Piece):
 
 
 class Knight(Piece):
+    def __init__(self, color):
+        super().__init__(color)
+
+    def get_type(self):
+        return 'K'  # Quân Mã
+    
     def get_valid_moves(self, board, position):
         moves = []
         row, col = position
@@ -91,6 +108,12 @@ class Knight(Piece):
 
 
 class Bishop(Piece):
+    def __init__(self, color):
+        super().__init__(color)
+
+    def get_type(self):
+        return 'B'  # Quân Mã
+    
     def get_valid_moves(self, board, position):
         moves = []
         row, col = position
@@ -113,6 +136,12 @@ class Bishop(Piece):
 
 
 class Queen(Piece):
+    def __init__(self, color):
+        super().__init__(color)
+
+    def get_type(self):
+        return 'Q'  # Quân Mã
+
     def get_valid_moves(self, board, position):
         # Hậu có thể di chuyển như cả Tượng và Xe
         moves = Rook(self.color).get_valid_moves(board, position) + Bishop(self.color).get_valid_moves(board, position)
@@ -120,6 +149,12 @@ class Queen(Piece):
 
 
 class King(Piece):
+    def __init__(self, color):
+        super().__init__(color)
+
+    def get_type(self):
+        return 'K'  # Quân Mã
+    
     def __init__(self, color):
         super().__init__(color)
         self.has_move = False

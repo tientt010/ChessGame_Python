@@ -6,6 +6,9 @@ pygame.init()
 class Graphics:
     def __init__(self, board):
         self.board = board
+        self.screen = pygame.display.set_mode((1000, 800)) # khời tạo cửa sổ pygame kích thước 1000 x 800
+        self.font = pygame.font.Font(None, 24) #font dùng để hiển thị
+
         self.window = pygame.display.set_mode((WIDTH + 200, HEIGHT), pygame.DOUBLEBUF | pygame.SRCALPHA)
         pygame.display.set_caption("Chess Game")
         self.load_images()
@@ -14,6 +17,8 @@ class Graphics:
         self.running = True
         # self.screen = pygame.display.set_mode((800, 800))
         self.draw_initial_board()
+
+        self.font = pygame.font.Font(None, 24) # Font chữ để hiển thị quân cờ
 
     def load_images(self):
         self.images = {}
@@ -55,7 +60,7 @@ class Graphics:
 
     def draw_timer_box(self):
         
-        white_timer_rect = pygame.Rect(WIDTH + 50, HEIGHT - 230, 100, 60)
+        white_timer_rect = pygame.Rect(WIDTH + 50, HEIGHT - 130, 100, 60)
         pygame.draw.rect(self.window, (255, 255, 255), white_timer_rect)  # Nền màu trắng
         #pygame.draw.rect(self.window, (255, 255, 255), white_timer_rect, 2)  # Viền màu trắng
 
@@ -63,6 +68,11 @@ class Graphics:
         black_timer_rect = pygame.Rect(WIDTH + 50, 170, 100, 60)
         pygame.draw.rect(self.window, (0,0,0), black_timer_rect)
         #pygame.draw.rect(self.window, (255, 255, 255), black_timer_rect, 2)
+
+
+
+
+
 
 
 
@@ -120,7 +130,7 @@ class Graphics:
 
         # Render nội dung thông báo
         text_surface = self.font.render(message, True, color)
-        text_rect = text_surface.get_rect(center=(400, 400))  # Vị trí giữa màn hình
+        text_rect = text_surface.get_rect(center=(500, 400))  # Vị trí giữa màn hình
 
         # Hiển thị thông báo
         self.window.blit(text_surface, text_rect)
@@ -128,3 +138,25 @@ class Graphics:
 
         # Dừng game trong vài giây để người chơi có thể đọc thông báo
         pygame.time.wait(5000)  # Dừng 5 giây
+
+    def draw_captured_pieces(self, captured_white, captured_black):
+        # vẽ quân cờ đen bị ăn (ở khu vực người chơi trắng)
+        x, y = WIDTH + 50, HEIGHT // 2 + 50 # vị trí hiển thị
+        for piece in captured_black:
+            self.screen.blit(self.get_piece_image(piece), (x, y))
+            x += 40  # Dãn cách giữa các quân cờ
+            
+
+        # Vẽ quân cờ trắng bị ăn (ở khu vực người chơi đen)
+        x, y = WIDTH + 50, 50 # Vị trí hiển thị
+        for piece in captured_white:
+            self.screen.blit(self.get_piece_image(piece), (x, y))
+            x += 40  # Dãn cách giữa các quân cờ
+            
+
+
+        pygame.display.flip()
+
+    def get_piece_image(self, piece):
+        return pygame.image.load(f"images/{piece.get_color()}{piece.get_type()}.png")
+    
