@@ -1,16 +1,20 @@
     # main.py
-from game.game_opption import GameOpption
+from game.game_manager import Game_Manager
 from game.game_offline import Game_offline  
+from game.game_bot import Game_bot
 # from game_online import Game_online
-# from game_bot import Game_bot
 def main():
     # Hiển thị phần Menu game
-    settings = GameOpption()
+    settings = Game_Manager()
     game_mode = settings.display()
     # Kiểm tra lựa chọn và bắt đầu game theo chế độ
     if game_mode == 0:
         # Bắt đầu game với AI (cần tích hợp AI vào phần này)
-        # game = Game_bot()
+        try:
+            game = Game_bot()
+            game.start()
+        except Exception as e:
+            print(f"Error: {e}")
         return
     elif game_mode == 1:
         # Bắt đầu game với chế độ offline
