@@ -18,13 +18,24 @@ class Game_offline:
         self.move_sound = pygame.mixer.Sound("sounds/move.wav")
         self.select_sound = pygame.mixer.Sound("sounds/capture.wav")
 
+        self.captured_white = []  # Lưu quân cờ trắng bị ăn
+        self.captured_black = []  # Lưu quân cờ đen bị ăn
+
     def play_turn(self, start_pos, end_pos):
         if end_pos in self.valid_moves:
+            captured_piece = self.board.get_piece(end_pos) # Kiểm tra nếu có quân cờ bị ăn
+            if captured_piece:
+                if self.board.current_turn == 'w': # nếu trắng đi và ăn quân đen
+                    self.captured_black.append(captured_piece)
+                else: #nếu đen đi và ăn quân trắng
+                    self.captured_white.append(captured_piece)
+
             self.board.move_piece(start_pos, end_pos)
             self.move_sound.play()
             self.valid_moves = []
             self.switch_turn()
             self.graphics.draw_initial_board()  # Vẽ lại bàn cờ ngay sau nước đi
+            
             check_mate=self.board.is_checkmate(self.board.current_turn)
             if check_mate:
                 if check_mate == "win":
@@ -102,7 +113,10 @@ class Game_offline:
                         pygame.display.flip()
 
             self.graphics.draw_timer_box()
-            self.graphics.draw_timers(self.time_white, self.time_black)
+            self.graphics.draw_timers(self.time_white, self.time_black) # hiển thị thời gian còn lại
+
+            self.graphics.draw_captured_pieces(self.captured_white, self.captured_black) # hiển thị quân cờ bị ăn
+
             pygame.display.update(800, 0, 200, 800)
             clock.tick(FPS)
         pygame.quit()
