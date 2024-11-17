@@ -57,6 +57,8 @@ class Game_offline:
 
     def update_timer(self):
         while not self.game_end:
+            self.graphics.draw_timer_box()
+            self.graphics.draw_timers(self.time_white,self.time_black)
             current_time = pygame.time.get_ticks()
             elapsed_time = (current_time - self.turn_start_time) // 1000
             if self.board.current_turn == 'w':
@@ -115,7 +117,7 @@ class Game_offline:
 
             self.graphics.draw_timer_box()
             self.graphics.draw_timers(self.time_white, self.time_black)
-            pygame.display.update(800, 0, 200, 800)
+            pygame.display.update()
             clock.tick(FPS)
         pygame.quit()
 

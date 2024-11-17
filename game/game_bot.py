@@ -12,9 +12,6 @@ class Game_bot:
         self.selected_square = None
         self.valid_moves = []
         self.game_end = False
-        self.time_white = 1200  # 20 phút (1200 giây)
-        self.time_black = 1200
-        self.turn_start_time = pygame.time.get_ticks()
         # Âm thanh trò chơi
         self.move_sound = pygame.mixer.Sound("sounds/move.wav")
         self.select_sound = pygame.mixer.Sound("sounds/capture.wav")
@@ -60,27 +57,12 @@ class Game_bot:
 
 
     def switch_turn(self):
-        self.turn_start_time = pygame.time.get_ticks()
         self.board.current_turn = 'b' if self.board.current_turn == 'w' else 'w'
-
-    def update_timer(self):
-        while not self.game_end:
-            pygame.time.wait(1000)
-            current_time = pygame.time.get_ticks()
-            elapsed_time = (current_time - self.turn_start_time) // 1000
-            if self.board.current_turn == 'w':
-                self.time_white = max(0, self.time_white - elapsed_time)
-            else:
-                self.time_black = max(0, self.time_black - elapsed_time)
-            self.turn_start_time = current_time
-            if self.time_white == 0 or self.time_black == 0:
-                self.game_end = True
 
     def start(self):
         clock = pygame.time.Clock()
         running = True
-        timer_thread = threading.Thread(target=self.update_timer, daemon=True)
-        timer_thread.start()
+
 
         if not self.stockfish.start():
             print("Error: Failed to start Stockfish.")
@@ -120,8 +102,6 @@ class Game_bot:
                             self.graphics.highlight_square(move, 'move')
                         pygame.display.flip()
 
-            self.graphics.draw_timer_box()
-            self.graphics.draw_timers(self.time_white, self.time_black)
             pygame.display.update(800, 0, 200, 800)
             clock.tick(FPS)
         pygame.quit()

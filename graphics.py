@@ -12,7 +12,7 @@ class Graphics:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 24)
         self.running = True
-        self.screen = pygame.display.set_mode((800, 800))
+        # self.screen = pygame.display.set_mode((800, 800))
         self.draw_initial_board()
 
     def load_images(self):
@@ -86,6 +86,7 @@ class Graphics:
 
         # Cập nhật phần hiển thị của các ô đồng hồ
         pygame.display.update(WIDTH, 0, 200, HEIGHT)
+        
 
 
     def highlight_square(self, position, highlight_type='piece'):
@@ -115,14 +116,14 @@ class Graphics:
 
         pygame.time.wait(5000) 
         # Tô nền đen
-        self.screen.fill((100, 0, 0))
+        self.window.fill((100, 0, 0))
 
         # Render nội dung thông báo
         text_surface = self.font.render(message, True, color)
         text_rect = text_surface.get_rect(center=(400, 400))  # Vị trí giữa màn hình
 
         # Hiển thị thông báo
-        self.screen.blit(text_surface, text_rect)
+        self.window.blit(text_surface, text_rect)
         pygame.display.flip()  # Cập nhật màn hình
 
         # Dừng game trong vài giây để người chơi có thể đọc thông báo
