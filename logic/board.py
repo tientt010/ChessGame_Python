@@ -71,7 +71,8 @@ class Board:
                 self.board[end_pos[0]][end_pos[1]].set_piece(Pawn(piece.get_color()))
         if fake_move:
             return
-        self.move_list.append((start_pos,end_pos))
+        
+        self.move_list.append(self.move_to_string(start_pos,end_pos))
         if isinstance(piece,(King, Rook)):
             piece.has_move=True
     
@@ -96,6 +97,10 @@ class Board:
                         return True
         return False
 
+    def move_to_string(self, start_pos, end_pos) :
+        
+        return chr(ord('a') + start_pos[1]) + str(8 - start_pos[0]) + chr(ord('a') + end_pos[1]) + str(8-end_pos[0])
+
     def is_checkmate(self, color):
         # Kiểm tra nếu không còn nước đi nào hợp lệ
         for row in range(ROWS):
@@ -104,7 +109,7 @@ class Board:
                 if piece and piece.get_color() == color:
                     moves = piece.get_safe_moves(self,(row,col))
                     if len(moves)>0 :
-                        return False
+                        return 'ongoing'
         if self.is_check(color) :
             return "win"
         else: return "draw"

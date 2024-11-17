@@ -18,6 +18,18 @@ class Game_offline:
         self.move_sound = pygame.mixer.Sound("sounds/move.wav")
         self.select_sound = pygame.mixer.Sound("sounds/capture.wav")
 
+    def end_game(self, result):
+        if result == "win":
+            message = 'White player win!' if self.board.current_turn == 'b' else 'Lose player win!'
+        elif result == "draw":
+            message = "Draw!"
+        else:
+            message = "Unknown result"
+        
+        self.graphics.show_message(message)
+        self.graphics.running = False
+        self.game_end = True
+
     def play_turn(self, start_pos, end_pos):
         if end_pos in self.valid_moves:
             self.board.move_piece(start_pos, end_pos)
@@ -26,14 +38,14 @@ class Game_offline:
             self.switch_turn()
             self.graphics.draw_initial_board()  # Vẽ lại bàn cờ ngay sau nước đi
             check_mate=self.board.is_checkmate(self.board.current_turn)
-            if check_mate:
+            if check_mate != 'ongoing':
                 if check_mate == "win":
                     self.game_end = True
-                    print(f"{'White player' if self.board.current_turn == 'b' else 'Black player'} wins!")
+                    self.end_game("win")
                     self.graphics.running = False
                 else :
                     self.game_end = True
-                    print("draw!")
+                    self.end_game("draw")
                     self.graphics.running = False
                 return True
         return False
