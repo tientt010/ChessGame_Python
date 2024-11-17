@@ -72,6 +72,11 @@ class Graphics:
 
 
 
+
+
+
+
+
     def draw_timers(self, time_white, time_black):
        
         # Phông chữ nhỏ hơn cho đồng hồ
