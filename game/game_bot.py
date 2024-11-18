@@ -16,6 +16,7 @@ class Game_bot:
         self.move_sound = pygame.mixer.Sound("sounds/move.wav")
         self.select_sound = pygame.mixer.Sound("sounds/capture.wav")
         self.stockfish = StockfishEngine()
+        self.is_capture = False
     
     # Thêm mới sư kiện end_game
     def end_game(self, result):
@@ -26,7 +27,7 @@ class Game_bot:
         else:
             message = "Unknown result"
         
-        self.graphics.show_message(message)
+        self.graphics.show_result(result,message)
         self.graphics.running = False
         self.game_end = True
         self.stockfish.stop()
@@ -39,11 +40,17 @@ class Game_bot:
             end_pos = (8 - int(turn_bot[3]), ord(turn_bot[2]) - ord('a'))
         
         if current_turn == 'bot' or end_pos in self.valid_moves:
+            captured_piece = self.board.get_piece(end_pos) # Kiểm tra nếu có quân cờ bị ăn
+            if captured_piece:
+                self.is_capture = True
             self.board.move_piece(start_pos, end_pos)
             self.move_sound.play()
             self.valid_moves = []
             self.switch_turn()
-            self.graphics.draw_initial_board()
+            self.graphics.draw_update(self.is_capture,self.board.current_turn)
+            if self.is_capture :
+                self.graphics.draw_timer_box()
+            self.is_capture=False
             check_mate = self.board.is_checkmate(self.board.current_turn)
             if check_mate!= 'ongoing':
                 if check_mate == "win":
@@ -80,7 +87,8 @@ class Game_bot:
                     if clicked_square:
                         if self.selected_square:
                             # Xóa highlight của quân cờ trước đó bằng cách vẽ lại bàn cờ
-                            self.graphics.draw_initial_board()
+                            self.graphics.draw_update(self.is_capture,self.board.current_turn)
+                            self.is_capture=False
 
                             # Nếu đã chọn quân cờ, cố gắng di chuyển
                             if clicked_square in self.valid_moves:

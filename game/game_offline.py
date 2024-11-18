@@ -19,36 +19,34 @@ class Game_offline:
         # Âm thanh trò chơi
         self.move_sound = pygame.mixer.Sound("sounds/move.wav")
         self.select_sound = pygame.mixer.Sound("sounds/capture.wav")
+        self.is_capture=False
 
     def end_game(self, result):
         if result == "win":
-            message = 'White player win!' if self.board.current_turn == 'b' else 'Lose player win!'
+            message = 'White player win!' if self.board.current_turn == 'b' else 'Black player win!'
         elif result == "draw":
             message = "Draw!"
         else:
             message = "Unknown result"
         
-        self.graphics.show_message(message)
+        self.graphics.show_result(result,message,WHITE if self.board.current_turn == 'b' else BLACK )
         self.graphics.running = False
         self.game_end = True
-
-        
 
     def play_turn(self, start_pos, end_pos):
         if end_pos in self.valid_moves:
             captured_piece = self.board.get_piece(end_pos) # Kiểm tra nếu có quân cờ bị ăn
             if captured_piece:
-                if self.board.current_turn == 'w': # nếu trắng đi và ăn quân đen
-                    self.captured_black.append(captured_piece)
-                else: #nếu đen đi và ăn quân trắng
-                    self.captured_white.append(captured_piece)
+                # show_icon_thread = threading.Thread(target=self.graphics.show_icon(self.board.current_turn), daemon=True)
+                # show_icon_thread.start()
+                self.is_capture=True
 
             self.board.move_piece(start_pos, end_pos)
             self.move_sound.play()
             self.valid_moves = []
             self.switch_turn()
-            self.graphics.draw_initial_board()  # Vẽ lại bàn cờ ngay sau nước đi
-            
+            self.graphics.draw_update(self.is_capture,self.board.current_turn)  # Vẽ lại bàn cờ ngay sau nước đi
+            self.is_capture=False
             check_mate=self.board.is_checkmate(self.board.current_turn)
             if check_mate != 'ongoing':
                 if check_mate == "win":
@@ -69,8 +67,9 @@ class Game_offline:
 
     def update_timer(self):
         while not self.game_end:
-            self.graphics.draw_timer_box()
+            # self.graphics.draw_timer_box()
             self.graphics.draw_timers(self.time_white,self.time_black)
+
             current_time = pygame.time.get_ticks()
             elapsed_time = (current_time - self.turn_start_time) // 1000
             if self.board.current_turn == 'w':
@@ -85,11 +84,12 @@ class Game_offline:
                     self.game_end = True
             self.turn_start_time = current_time
             pygame.time.wait(1000)
+            # pygame.display.update()
 
     def start(self):
         clock = pygame.time.Clock()
         running = True
-
+        self.graphics.draw_initial_board()
         timer_thread = threading.Thread(target=self.update_timer, daemon=True)
         timer_thread.start()
 
@@ -105,8 +105,7 @@ class Game_offline:
                     if clicked_square:
                         if self.selected_square:
                             # Xóa highlight của quân cờ trước đó bằng cách vẽ lại bàn cờ
-                            self.graphics.draw_initial_board()
-
+                            self.graphics.draw_update(self.is_capture)
                             # Nếu đã chọn quân cờ, cố gắng di chuyển
                             if clicked_square in self.valid_moves:
                                 if self.play_turn(self.selected_square, clicked_square):
@@ -125,12 +124,12 @@ class Game_offline:
                             self.graphics.highlight_square(self.selected_square, 'piece')
                         for move in self.valid_moves:
                             self.graphics.highlight_square(move, 'move')
-                        pygame.display.flip()
+                        pygame.display.update(0 ,0, WIDTH , HEIGHT)
 
             self.graphics.draw_timer_box()
             self.graphics.draw_timers(self.time_white, self.time_black) # hiển thị thời gian còn lại
 
-            self.graphics.draw_captured_pieces(self.captured_white, self.captured_black) # hiển thị quân cờ bị ăn
+            # self.graphics.draw_captured_pieces(self.captured_white, self.captured_black) # hiển thị quân cờ bị ăn
 
             pygame.display.update(800, 0, 200, 800)
             clock.tick(FPS)

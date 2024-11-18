@@ -7,23 +7,13 @@ def main():
     # Hiển thị phần Menu game
     settings = Game_Manager()
     game_mode = settings.display()
-    # Kiểm tra lựa chọn và bắt đầu game theo chế độ
     if game_mode == 0:
-        # Bắt đầu game với AI (cần tích hợp AI vào phần này)
-        try:
-            game = Game_bot()
-            game.start()
-        except Exception as e:
-            print(f"Error: {e}")
-        return
+
+        game = Game_bot()
     elif game_mode == 1:
-        # Bắt đầu game với chế độ offline
         game = Game_offline()
     elif game_mode == 2:
-        # Bắt đầu game với chế độ online (cần tích hợp online vào phần này)
-        # game = Game_online()
         return
-
     game.start()  # Bắt đầu game với chế độ đã chọn
 
 

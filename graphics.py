@@ -1,12 +1,17 @@
 import pygame
+import random
 from config import *
+from scipy.ndimage import gaussian_filter
+from moviepy.editor import VideoFileClip
+from PIL import Image, ImageSequence
+from logic.board import Board
+from threading import Thread
 
 pygame.init()
 
 class Graphics:
     def __init__(self, board):
         self.board = board
-        self.screen = pygame.display.set_mode((1000, 800)) # khời tạo cửa sổ pygame kích thước 1000 x 800
         self.font = pygame.font.Font(None, 24) #font dùng để hiển thị
 
         self.window = pygame.display.set_mode((WIDTH + 200, HEIGHT), pygame.DOUBLEBUF | pygame.SRCALPHA)
@@ -17,7 +22,6 @@ class Graphics:
         self.running = True
         # self.screen = pygame.display.set_mode((800, 800))
         self.draw_initial_board()
-
         self.font = pygame.font.Font(None, 24) # Font chữ để hiển thị quân cờ
 
     def load_images(self):
@@ -58,27 +62,25 @@ class Graphics:
         pygame.draw.rect(self.window, (255, 255, 255), white_rect)
         pygame.display.flip()
 
-    def draw_timer_box(self):
-        
-        white_timer_rect = pygame.Rect(WIDTH + 50, HEIGHT - 130, 100, 60)
+    def draw_update(self, is_capture, current="w"):
+        self.draw_board()
+        self.draw_pieces()
+        pygame.display.flip()
+        if is_capture :
+            show_icon_thread = Thread(target=self.show_icon(current), daemon=True)
+            show_icon_thread.start()
+
+    def draw_timer_box(self, height = HEIGHT//2):
+        white_timer_rect = pygame.Rect(WIDTH, HEIGHT-height, 200, height)    
         pygame.draw.rect(self.window, (255, 255, 255), white_timer_rect)  # Nền màu trắng
-        #pygame.draw.rect(self.window, (255, 255, 255), white_timer_rect, 2)  # Viền màu trắng
 
-        
-        black_timer_rect = pygame.Rect(WIDTH + 50, 170, 100, 60)
-        pygame.draw.rect(self.window, (0,0,0), black_timer_rect)
-        #pygame.draw.rect(self.window, (255, 255, 255), black_timer_rect, 2)
-
-
-
-
-
-
-
-
+        black_timer_rect = pygame.Rect(WIDTH, 0, 200, height)
+        pygame.draw.rect(self.window, (0, 0, 0), black_timer_rect)  # Nền màu đen
 
     def draw_timers(self, time_white, time_black):
-       
+        # Vẽ lại các hộp đồng hồ trước khi vẽ thời gian
+        self.draw_timer_box(150)
+
         # Phông chữ nhỏ hơn cho đồng hồ
         small_font = pygame.font.SysFont(None, 50)  # Đặt kích thước phông chữ nhỏ hơn cho phù hợp với ô đồng hồ
 
@@ -87,15 +89,17 @@ class Graphics:
         black_time_text = small_font.render(f"{time_black // 60}:{time_black % 60:02}", True, (255, 255, 255))
 
         # Đặt vị trí text thời gian để căn giữa trong các ô đồng hồ
-        white_text_rect = white_time_text.get_rect(center=(WIDTH + 100, HEIGHT - 200))  
-        black_text_rect = black_time_text.get_rect(center=(WIDTH + 100, 200))            
-
+        white_text_rect = white_time_text.get_rect(center=(WIDTH + 100, HEIGHT - 100))  
+        black_text_rect = black_time_text.get_rect(center=(WIDTH + 100, 100))            
+        # white_text_rect = white_time_text.get_rect(midbottom=(WIDTH + 100, HEIGHT - 20))  
+        # black_text_rect = black_time_text.get_rect(midtop=(WIDTH + 100, 20))
         # Vẽ text lên cửa sổ
         self.window.blit(white_time_text, white_text_rect)
         self.window.blit(black_time_text, black_text_rect)
 
         # Cập nhật phần hiển thị của các ô đồng hồ
         pygame.display.update(WIDTH, 0, 200, HEIGHT)
+      
         
 
 
@@ -120,43 +124,114 @@ class Graphics:
         return row, col
 
 
-    def show_message(self, message, color=(255, 255, 255)):
-        
-        #Hiển thị thông báo trên màn hình.
+    def show_icon(self, current_turn):
+        if current_turn == 'b':
+            self.show_status(WIDTH + 50, HEIGHT // 2 + 50, 'happy', WIDTH + 50, HEIGHT // 2 - 150, 'sad')
+        else:
+            self.show_status(WIDTH + 50, HEIGHT // 2 + 50, 'sad', WIDTH + 50, HEIGHT // 2 - 150, 'happy')
 
-        pygame.time.wait(5000) 
-        # Tô nền đen
-        self.window.fill((100, 0, 0))
+    def show_status(self, x1, y1, status1, x2, y2, status2):
+        gif_index1 = random.randrange(1, 4)  # Chọn ngẫu nhiên một trong các file GIF đầu tiên
+        gif_index2 = random.randrange(1, 4)  # Chọn ngẫu nhiên một trong các file GIF thứ hai
+        gif_path1 = f'images/{status1}{gif_index1}.gif'
+        gif_path2 = f'images/{status2}{gif_index2}.gif'
 
-        # Render nội dung thông báo
-        text_surface = self.font.render(message, True, color)
-        text_rect = text_surface.get_rect(center=(500, 400))  # Vị trí giữa màn hình
+        # Tải GIF động với moviepy và chỉnh kích thước về 100x100
+        clip1 = VideoFileClip(gif_path1).resize((100, 100))
+        clip2 = VideoFileClip(gif_path2).resize((100, 100))
 
-        # Hiển thị thông báo
-        self.window.blit(text_surface, text_rect)
-        pygame.display.flip()  # Cập nhật màn hình
+        running = True
+        start_ticks = pygame.time.get_ticks()
 
-        # Dừng game trong vài giây để người chơi có thể đọc thông báo
-        pygame.time.wait(5000)  # Dừng 5 giây
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
 
-    def draw_captured_pieces(self, captured_white, captured_black):
-        # vẽ quân cờ đen bị ăn (ở khu vực người chơi trắng)
-        x, y = WIDTH + 50, HEIGHT // 2 + 50 # vị trí hiển thị
-        for piece in captured_black:
-            self.screen.blit(self.get_piece_image(piece), (x, y))
-            x += 40  # Dãn cách giữa các quân cờ
-            
+            elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000.0
+            frame1 = clip1.get_frame(elapsed_time % clip1.duration)
+            frame_surface1 = pygame.surfarray.make_surface(frame1.swapaxes(0, 1))
 
-        # Vẽ quân cờ trắng bị ăn (ở khu vực người chơi đen)
-        x, y = WIDTH + 50, 50 # Vị trí hiển thị
-        for piece in captured_white:
-            self.screen.blit(self.get_piece_image(piece), (x, y))
-            x += 40  # Dãn cách giữa các quân cờ
-            
+            frame2 = clip2.get_frame(elapsed_time % clip2.duration)
+            frame_surface2 = pygame.surfarray.make_surface(frame2.swapaxes(0, 1))
+
+            # Vẽ GIF lên màn hình tại vị trí xác định (x, y) trên nền màu đã tạo
+            self.window.blit(frame_surface1, (x1, y1))
+            self.window.blit(frame_surface2, (x2, y2))
+
+            # Cập nhật màn hình
+            pygame.display.update(x1, y1, 100, 100)
+            pygame.display.update(x2, y2, 100, 100)
+
+            # Kết thúc sau 3 giây
+            if pygame.time.get_ticks() - start_ticks >= 3000:
+                running = False
+
+        # Đóng các clip sau khi hiển thị
+        clip1.close()
+        clip2.close()
+
+    def show_result(self, result, message, color=(0, 0, 255)):
+        pygame.time.wait(3000)
+        gif_path ='images\\' + result + ".gif"
+        background = self.window.copy()
+        blurred_background = self.apply_gaussian_blur(background, 10)
+        self.window.blit(blurred_background, (0, 0))
+        result_window = pygame.Surface((480, 480), pygame.SRCALPHA)
+        result_window.fill((0, 0, 0, 180))
+
+        clip = VideoFileClip(gif_path)
+        frame_surface = None
+
+        font = pygame.font.SysFont(None, 50)
+
+        def draw_text(surface, text, font, pos, text_color, shadow_color):
+            text_surface = font.render(text, True, shadow_color)
+            text_rect = text_surface.get_rect(center=(pos[0] + 2, pos[1] + 2))
+            surface.blit(text_surface, text_rect)
+            text_surface = font.render(text, True, text_color)
+            text_rect = text_surface.get_rect(center=pos)
+            surface.blit(text_surface, text_rect)
+
+        running = True
+        start_ticks = pygame.time.get_ticks()
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+            self.window.blit(blurred_background, (0, 0))
+            elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000.0
+            frame = clip.get_frame(elapsed_time % clip.duration)
+            frame_surface = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
+            screen_width, screen_height = self.window.get_size()
+            x_pos = (screen_width - frame_surface.get_width()) // 2
+            y_pos = (screen_height - frame_surface.get_height()) // 2
+            self.window.blit(frame_surface, (x_pos, y_pos))
+            draw_text(self.window, message, font, (screen_width // 2, y_pos - 50), color, (0, 0, 0))
+            pygame.display.update()
+
+            if pygame.time.get_ticks() - start_ticks >= 5000:
+                running = False
+
+        clip.close()
 
 
-        pygame.display.flip()
 
-    def get_piece_image(self, piece):
-        return pygame.image.load(f"images/{piece.get_color()}{piece.get_type()}.png")
-    
+
+    def apply_gaussian_blur(self, surface, sigma=5):
+        """
+        Áp dụng Gaussian Blur lên một bề mặt pygame.
+        :param surface: Bề mặt cần làm mờ.
+        :param sigma: Độ mạnh của Gaussian Blur.
+        :return: Bề mặt đã được làm mờ.
+        """
+        # Chuyển bề mặt thành mảng numpy
+        array = pygame.surfarray.pixels3d(surface).copy()
+
+        # Áp dụng Gaussian Blur
+        blurred_array = gaussian_filter(array, sigma=(sigma, sigma, 0))
+
+        # Tạo lại bề mặt từ mảng đã làm mờ
+        blurred_surface = pygame.surfarray.make_surface(blurred_array)
+        return blurred_surface
