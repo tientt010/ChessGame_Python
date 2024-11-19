@@ -164,7 +164,7 @@ class Graphics:
             pygame.display.update(x2, y2, 100, 100)
 
             # Kết thúc sau 3 giây
-            if pygame.time.get_ticks() - start_ticks >= 3000:
+            if pygame.time.get_ticks() - start_ticks >= 2000:
                 running = False
 
         # Đóng các clip sau khi hiển thị
@@ -172,19 +172,21 @@ class Graphics:
         clip2.close()
 
     def show_result(self, result, message, color=(0, 0, 255)):
-        pygame.time.wait(3000)
-        gif_path ='images\\' + result + ".gif"
+    
+        gif_path = f'images/{result}.gif'
         background = self.window.copy()
         blurred_background = self.apply_gaussian_blur(background, 10)
         self.window.blit(blurred_background, (0, 0))
-        result_window = pygame.Surface((480, 480), pygame.SRCALPHA)
-        result_window.fill((0, 0, 0, 180))
-
+        
+        # Tải video và chuyển đổi thành danh sách frame
         clip = VideoFileClip(gif_path)
-        frame_surface = None
+        frames = [pygame.surfarray.make_surface(clip.get_frame(t).swapaxes(0, 1)) for t in range(int(clip.duration * clip.fps))]
+        clip.close()
 
         font = pygame.font.SysFont(None, 50)
+        clock = pygame.time.Clock()
 
+        # Vẽ text
         def draw_text(surface, text, font, pos, text_color, shadow_color):
             text_surface = font.render(text, True, shadow_color)
             text_rect = text_surface.get_rect(center=(pos[0] + 2, pos[1] + 2))
@@ -193,28 +195,77 @@ class Graphics:
             text_rect = text_surface.get_rect(center=pos)
             surface.blit(text_surface, text_rect)
 
+        # Vẽ nút
+        def draw_button(surface, text, rect, color, hover_color):
+            mouse_pos = pygame.mouse.get_pos()
+            if rect.collidepoint(mouse_pos):
+                pygame.draw.rect(surface, hover_color, rect)  # Hover
+            else:
+                pygame.draw.rect(surface, color, rect)  # Bình thường
+            draw_text(surface, text, font, rect.center, (255, 255, 255), (0, 0, 0))
+
+        # Xử lý sự kiện nút
+        def handle_button_click():
+            mouse_pos = pygame.mouse.get_pos()
+            if restart_button.collidepoint(mouse_pos):
+                from game.game_bot import Game_bot
+                self.game = Game_bot()
+                self.game.start()
+                return True  # Chuyển trạng thái
+            elif exit_button.collidepoint(mouse_pos):
+                from game.game_manager import Game_Manager
+                self.game = Game_Manager()
+                self.game.display()
+                return True  # Chuyển trạng thái
+            return False
+
         running = True
         start_ticks = pygame.time.get_ticks()
+
+        # Định nghĩa các nút
+        button_width, button_height = 200, 50
+        restart_button = pygame.Rect(
+            self.window.get_width() // 2 - button_width - 10,
+            self.window.get_height() - button_height - 20,
+            button_width, button_height
+        )
+        exit_button = pygame.Rect(
+            self.window.get_width() // 2 + 10,
+            self.window.get_height() - button_height - 20,
+            button_width, button_height
+        )
+
+        # Vòng lặp hiển thị
+        frame_index = 0
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if handle_button_click():
+                        running = False
 
-            self.window.blit(blurred_background, (0, 0))
+            # Tính toán frame hiện tại
             elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000.0
-            frame = clip.get_frame(elapsed_time % clip.duration)
-            frame_surface = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
+            frame_index = int(elapsed_time * clip.fps) % len(frames)
+
+            # Hiển thị background và frame video
+            self.window.blit(blurred_background, (0, 0))
+            frame_surface = frames[frame_index]
             screen_width, screen_height = self.window.get_size()
             x_pos = (screen_width - frame_surface.get_width()) // 2
             y_pos = (screen_height - frame_surface.get_height()) // 2
             self.window.blit(frame_surface, (x_pos, y_pos))
+
+            # Hiển thị thông điệp
             draw_text(self.window, message, font, (screen_width // 2, y_pos - 50), color, (0, 0, 0))
+
+            # Vẽ các nút
+            draw_button(self.window, "Play Again", restart_button, (0, 128, 0), (0, 255, 0))
+            draw_button(self.window, "Exit", exit_button, (128, 0, 0), (255, 0, 0))
+
             pygame.display.update()
-
-            if pygame.time.get_ticks() - start_ticks >= 5000:
-                running = False
-
-        clip.close()
+            clock.tick(30)  # Giới hạn 30 FPS
 
 
 

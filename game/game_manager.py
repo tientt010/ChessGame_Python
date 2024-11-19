@@ -20,7 +20,7 @@ class Game_Manager:
         self.text_color = (255, 255, 255)
 
         # Vị trí và nội dung cho các tùy chọn
-        self.options = ["Play vs Computer", "Two Players (Offline)", "Two Players (Online)"]
+        self.options = ["Play vs Computer", "Two Players (Offline)", "Two Players (Online)","Quit Game"]
         self.selected_option = 0  # Dùng để xác định lựa chọn hiện tại
         self.select_opption = pygame.mixer.Sound("sounds/capture.wav")
 
