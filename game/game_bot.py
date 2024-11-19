@@ -31,6 +31,7 @@ class Game_bot:
         self.graphics.running = False
         self.game_end = True
         self.stockfish.stop()
+        pygame.quit()
 
     def play_turn(self, current_turn, start_pos=None, end_pos=None):
         if current_turn == 'bot':
@@ -58,7 +59,7 @@ class Game_bot:
                 else:
                     self.end_game("draw")
                 return True
-            if current_turn == 'player':
+            if current_turn == 'player' and self.graphics.running:
                 self.play_turn('bot')
         return False
 

@@ -209,10 +209,9 @@ class Graphics:
             y_pos = (screen_height - frame_surface.get_height()) // 2
             self.window.blit(frame_surface, (x_pos, y_pos))
             draw_text(self.window, message, font, (screen_width // 2, y_pos - 50), color, (0, 0, 0))
-            pygame.display.update()
-
             if pygame.time.get_ticks() - start_ticks >= 5000:
                 running = False
+            pygame.display.update()
 
         clip.close()
 
