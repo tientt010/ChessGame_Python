@@ -168,7 +168,7 @@ class Graphics:
             pygame.display.update(x2, y2, 100, 100)
 
             # Kết thúc sau 3 giây
-            if pygame.time.get_ticks() - start_ticks >= 2000:
+            if pygame.time.get_ticks() - start_ticks >= 1000:
                 running = False
 
         # Đóng các clip sau khi hiển thị
