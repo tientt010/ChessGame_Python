@@ -135,8 +135,8 @@ class Graphics:
             self.show_status(WIDTH + 50, HEIGHT // 2 + 50, 'sad', WIDTH + 50, HEIGHT // 2 - 150, 'happy')
 
     def show_status(self, x1, y1, status1, x2, y2, status2):
-        gif_index1 = random.randrange(1, 5)  # Chọn ngẫu nhiên một trong các file GIF đầu tiên
-        gif_index2 = random.randrange(1, 9)  # Chọn ngẫu nhiên một trong các file GIF thứ hai
+        gif_index1 = random.randrange(1, 5 if status1 == 'happy' else 9)  # Chọn ngẫu nhiên một trong các file GIF đầu tiên
+        gif_index2 = random.randrange(1, 5 if status2 == 'happy' else 9)  # Chọn ngẫu nhiên một trong các file GIF thứ hai
         gif_path1 = f'images/{status1}{gif_index1}.gif'
         gif_path2 = f'images/{status2}{gif_index2}.gif'
 
