@@ -17,22 +17,24 @@ class Game_bot:
         self.select_sound = pygame.mixer.Sound("sounds/capture.wav")
         self.stockfish = StockfishEngine()
         self.is_capture = False
+        self.option = -1
+        self.highlight_king = None
     
     # Thêm mới sư kiện end_game
     def end_game(self, result):
         if result == "win":
             message = 'Player win!' if self.board.current_turn == 'b' else 'Player Lose!'
+            result = 'win_bot' if self.board.current_turn == 'b' else 'lose_bot'
         elif result == "draw":
             message = "Draw!"
         else:
             message = "Unknown result"
         
-        self.graphics.show_result(result,message)
+        self.option = self.graphics.show_result(result,message)
         self.graphics.running = False
         self.game_end = True
         self.stockfish.stop()
-        pygame.quit()
-
+        
     def play_turn(self, current_turn, start_pos=None, end_pos=None):
         if current_turn == 'bot':
             self.stockfish.set_position(self.board.move_list)
@@ -48,7 +50,8 @@ class Game_bot:
             self.move_sound.play()
             self.valid_moves = []
             self.switch_turn()
-            self.graphics.draw_update(self.is_capture,self.board.current_turn)
+            self.highlight_king = self.board.find_king() if self.board.is_check() else None
+            self.graphics.draw_update(self.is_capture,self.board.current_turn, self.highlight_king)
             if self.is_capture :
                 self.graphics.draw_timer_box()
             self.is_capture=False
@@ -60,7 +63,7 @@ class Game_bot:
                     self.end_game("draw")
                 return True
             if current_turn == 'player' and self.graphics.running:
-                self.play_turn('bot')
+                return self.play_turn('bot')
         return False
 
 
@@ -88,7 +91,7 @@ class Game_bot:
                     if clicked_square:
                         if self.selected_square:
                             # Xóa highlight của quân cờ trước đó bằng cách vẽ lại bàn cờ
-                            self.graphics.draw_update(self.is_capture,self.board.current_turn)
+                            self.graphics.draw_update(self.is_capture, self.board.current_turn, self.highlight_king)
                             self.is_capture=False
 
                             # Nếu đã chọn quân cờ, cố gắng di chuyển
@@ -96,6 +99,12 @@ class Game_bot:
                                 if self.play_turn('player', self.selected_square, clicked_square):
                                     running = False
                                     self.game_end = True
+                                    if self.option ==2 :
+                                        return 2
+                                    elif self.option ==1:
+                                        return 0
+                                    else :
+                                        return -1
                                 self.selected_square = None
                             else:
                                 # Nếu nhấp vào ô không hợp lệ, chọn lại quân cờ mới
@@ -110,10 +119,15 @@ class Game_bot:
                         for move in self.valid_moves:
                             self.graphics.highlight_square(move, 'move')
                         pygame.display.flip()
-
             pygame.display.update(800, 0, 200, 800)
             clock.tick(FPS)
-        pygame.quit()
+        if self.option ==2 :
+            return 2
+        elif self.option ==1:
+            return 0
+        else :
+            return -1
+        # pygame.quit()
 
     def select_piece(self, position):
         piece = self.board.get_piece(position)

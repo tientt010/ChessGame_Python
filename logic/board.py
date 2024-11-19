@@ -85,7 +85,8 @@ class Board:
             Rook_start_pos=(start_pos[0],(3 if end_pos[1]>start_pos[1] else 5))
             Rook_end_pos=(start_pos[0],(0 if end_pos[1]>start_pos[1] else 7))
         self.move_piece(Rook_start_pos,Rook_end_pos,True)
-    def is_check(self, color):
+    def is_check(self, color = None):
+        if color is None: color = self.current_turn
         # Kiểm tra nếu vua của màu 'color' đang bị chiếu
         king_pos = self.find_king(color)
         opponent_color = 'b' if color == 'w' else 'w'
@@ -101,7 +102,8 @@ class Board:
         
         return chr(ord('a') + start_pos[1]) + str(8 - start_pos[0]) + chr(ord('a') + end_pos[1]) + str(8-end_pos[0])
 
-    def is_checkmate(self, color):
+    def is_checkmate(self, color= None):
+        if color is None: color = self.current_turn
         # Kiểm tra nếu không còn nước đi nào hợp lệ
         for row in range(ROWS):
             for col in range(COLS):
@@ -114,7 +116,8 @@ class Board:
             return "win"
         else: return "draw"
 
-    def find_king(self, color):
+    def find_king(self, color = None):
+        if color is None: color = self.current_turn
         # Tìm vị trí của quân Vua màu 'color'
         for row in range(ROWS):
             for col in range(COLS):

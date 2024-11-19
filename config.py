@@ -12,6 +12,7 @@ BLACK = (0, 0, 0)
 LIGHT_BROWN = (240, 217, 181)
 DARK_BROWN = (181, 136, 99)
 HIGHLIGHT_COLOR = (0, 255, 0)  # Màu để làm nổi bật các nước đi hợp lệ
+RED = (255,0,0)
 
 # Đường dẫn thư mục ảnh
 IMAGE_PATH = "images/"  

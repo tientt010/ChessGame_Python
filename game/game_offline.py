@@ -4,6 +4,7 @@ import pygame
 from config import *
 import threading
 
+pygame.init()
 class Game_offline:
     def __init__(self):
         self.board = Board()
@@ -16,10 +17,12 @@ class Game_offline:
         self.time_white = 1200  # 20 phút (1200 giây)
         self.time_black = 1200
         self.turn_start_time = pygame.time.get_ticks()
+        self.highlight_king = None
         # Âm thanh trò chơi
         self.move_sound = pygame.mixer.Sound("sounds/move.wav")
         self.select_sound = pygame.mixer.Sound("sounds/capture.wav")
         self.is_capture=False
+        self.option = -1
 
     def end_game(self, result):
         if result == "win":
@@ -29,9 +32,9 @@ class Game_offline:
         else:
             message = "Unknown result"
         
-        self.graphics.show_result(result,message,WHITE if self.board.current_turn == 'b' else BLACK )
         self.graphics.running = False
         self.game_end = True
+        self.option = self.graphics.show_result(result,message,WHITE if self.board.current_turn == 'b' else BLACK )
 
     def play_turn(self, start_pos, end_pos):
         if end_pos in self.valid_moves:
@@ -45,7 +48,8 @@ class Game_offline:
             self.move_sound.play()
             self.valid_moves = []
             self.switch_turn()
-            self.graphics.draw_update(self.is_capture,self.board.current_turn)  # Vẽ lại bàn cờ ngay sau nước đi
+            self.highlight_king = self.board.find_king() if self.board.is_check() else None
+            self.graphics.draw_update(self.is_capture,self.board.current_turn, self.highlight_king)  # Vẽ lại bàn cờ ngay sau nước đi
             self.is_capture=False
             check_mate=self.board.is_checkmate(self.board.current_turn)
             if check_mate != 'ongoing':
@@ -105,7 +109,7 @@ class Game_offline:
                     if clicked_square:
                         if self.selected_square:
                             # Xóa highlight của quân cờ trước đó bằng cách vẽ lại bàn cờ
-                            self.graphics.draw_update(self.is_capture)
+                            self.graphics.draw_update(self.is_capture,self.board.current_turn,self.highlight_king)
                             # Nếu đã chọn quân cờ, cố gắng di chuyển
                             if clicked_square in self.valid_moves:
                                 if self.play_turn(self.selected_square, clicked_square):
@@ -124,6 +128,7 @@ class Game_offline:
                             self.graphics.highlight_square(self.selected_square, 'piece')
                         for move in self.valid_moves:
                             self.graphics.highlight_square(move, 'move')
+                        
                         pygame.display.update(0 ,0, WIDTH , HEIGHT)
 
             self.graphics.draw_timer_box()
@@ -133,7 +138,8 @@ class Game_offline:
 
             pygame.display.update(800, 0, 200, 800)
             clock.tick(FPS)
-        pygame.quit()
+        # pygame.quit()
+        return self.option
 
     def select_piece(self, position):
         piece = self.board.get_piece(position)
