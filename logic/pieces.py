@@ -1,44 +1,44 @@
-# pieces.py
-from logic.utils import*
+from logic.utils import *
+
+
+# Lớp cha đại diện cho một quân cờ chung
 class Piece:
     def __init__(self, color):
-        self.color = color  # Màu của quân cờ: 'w' (trắng) hoặc 'b' (đen)
+        self.color = color                     # 'w' là quân trắng, 'b' là quân đen
 
+    # Trả về màu của quân cờ
     def get_color(self):
         return self.color
     
-    def get_type(self):
-        return self.__class__.__name__.lower() # trả về tên lớp, ví dụ 'pawn', 'king'
-
+    # Trả về danh sách các nước đi hợp lệ 
     def get_valid_moves(self, board, position):
-        """
-        Trả về danh sách các nước đi hợp lệ cho quân cờ này.
-        - Phương thức này cần được ghi đè trong các lớp con.
-        """
         raise NotImplementedError("Phương thức này cần được ghi đè trong lớp con.")
-    def get_safe_moves(self,board,position):
-        return [move for move in self.get_valid_moves(board,position) if is_safe_move(board,self,position,move)]
-    
-    def can_atack(self,board, position, target_pos):
-        return target_pos in self.get_valid_moves(board, position) 
-       
 
+    # Trả về danh sách các nước đi an toàn(vua không bị chiếu)
+    def get_safe_moves(self, board, position):
+        return [move for move in self.get_valid_moves(board, position) if is_safe_move(board, self, position, move)]
+
+    # Kiểm tra xem quân cờ có thể tấn công vị trí target_pos hay không.
+    def can_attack(self, board, position, target_pos):
+        return target_pos in self.get_valid_moves(board, position)
+
+
+# Quân Tốt
 class Pawn(Piece):
-    def init(self, color):
+    def __init__(self, color):
         super().__init__(color)
 
-    def get_type(self):
-        return 'P'
+    # Nước đi hợp lẹ của tốt
     def get_valid_moves(self, board, position):
         moves = []
         row, col = position
-        direction = -1 if self.color == 'w' else 1  # Tốt trắng đi lên (-1), tốt đen đi xuống (+1)
+        direction = -1 if self.color == 'w' else 1  # Trắng đi lên (-1), đen đi xuống (+1)
 
         # Di chuyển một ô phía trước
         if board.is_empty((row + direction, col)):
             moves.append((row + direction, col))
 
-            # Di chuyển hai ô nếu quân cờ đang ở vị trí ban đầu
+            # Di chuyển hai ô nếu đang ở vị trí ban đầu
             start_row = 6 if self.color == 'w' else 1
             if row == start_row and board.is_empty((row + 2 * direction, col)):
                 moves.append((row + 2 * direction, col))
@@ -48,20 +48,19 @@ class Pawn(Piece):
             next_col = col + offset
             if board.is_within_bounds((row + direction, next_col)) and not board.is_empty((row + direction, next_col)):
                 piece = board.get_piece((row + direction, next_col))
-                if piece.get_color() != self.color :
+                if piece.get_color() != self.color:
                     moves.append((row + direction, next_col))
 
         return moves
 
 
+# Quân Xe
 class Rook(Piece):
     def __init__(self, color):
         super().__init__(color)
         self.has_move = False
 
-    def get_type(self):
-        return 'R'
-
+    # Nước đi hợp lệ của xe
     def get_valid_moves(self, board, position):
         moves = []
         row, col = position
@@ -70,12 +69,12 @@ class Rook(Piece):
         for direction in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
             r, c = row + direction[0], col + direction[1]
             while board.is_within_bounds((r, c)):
-                if board.is_empty((r, c)) : 
+                if board.is_empty((r, c)):
                     moves.append((r, c))
                 elif board.get_piece((r, c)).get_color() != self.color:
                     moves.append((r, c))
-                    break 
-                else :
+                    break
+                else:
                     break
                 r += direction[0]
                 c += direction[1]
@@ -83,13 +82,12 @@ class Rook(Piece):
         return moves
 
 
+# Quân Mã
 class Knight(Piece):
     def __init__(self, color):
         super().__init__(color)
 
-    def get_type(self):
-        return 'K'  # Quân Mã
-    
+    # Nước đi của mã
     def get_valid_moves(self, board, position):
         moves = []
         row, col = position
@@ -101,19 +99,18 @@ class Knight(Piece):
         for move in knight_moves:
             r, c = row + move[0], col + move[1]
             if board.is_within_bounds((r, c)):
-                if (board.is_empty((r, c)) or board.get_piece((r, c)).get_color() != self.color) :
+                if board.is_empty((r, c)) or board.get_piece((r, c)).get_color() != self.color:
                     moves.append((r, c))
 
         return moves
 
 
+# Quân Tượng
 class Bishop(Piece):
     def __init__(self, color):
         super().__init__(color)
 
-    def get_type(self):
-        return 'B'  # Quân Mã
-    
+    # Danh sách các nước đi hợp lệ của tượng
     def get_valid_moves(self, board, position):
         moves = []
         row, col = position
@@ -122,11 +119,11 @@ class Bishop(Piece):
         for direction in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
             r, c = row + direction[0], col + direction[1]
             while board.is_within_bounds((r, c)):
-                if board.is_empty((r, c)) : 
+                if board.is_empty((r, c)):
                     moves.append((r, c))
                 elif board.get_piece((r, c)).get_color() != self.color:
                     moves.append((r, c))
-                    break                    
+                    break
                 else:
                     break
                 r += direction[0]
@@ -135,29 +132,25 @@ class Bishop(Piece):
         return moves
 
 
+# Quân Hậu
 class Queen(Piece):
     def __init__(self, color):
         super().__init__(color)
 
-    def get_type(self):
-        return 'Q'  # Quân Mã
-
+    # Nước đi hợp lệ của hậu
     def get_valid_moves(self, board, position):
-        # Hậu có thể di chuyển như cả Tượng và Xe
+        # Quân hậu có thể di chuyển như xe và tượng
         moves = Rook(self.color).get_valid_moves(board, position) + Bishop(self.color).get_valid_moves(board, position)
         return moves
 
 
+# Quân Vua
 class King(Piece):
     def __init__(self, color):
         super().__init__(color)
-
-    def get_type(self):
-        return 'K'  # Quân Mã
-    
-    def __init__(self, color):
-        super().__init__(color)
         self.has_move = False
+
+    # Nước đi hợp lệ của vua
     def get_valid_moves(self, board, position):
         moves = []
         row, col = position
@@ -169,16 +162,18 @@ class King(Piece):
         for move in king_moves:
             r, c = row + move[0], col + move[1]
             if board.is_within_bounds((r, c)):
-                if (board.is_empty((r, c)) or board.get_piece((r, c)).get_color() != self.color) :
+                if board.is_empty((r, c)) or board.get_piece((r, c)).get_color() != self.color:
                     moves.append((r, c))
+
         return moves
-    
+
+    # Trả về danh sách các nước đi an toàn bao gồm cả hoán thành
     def get_safe_moves(self, board, position):
         castle_moves = []
 
-        if can_left_castle(board, position, self.color,self.has_move):
+        if can_left_castle(board, position, self.color, self.has_move):
             castle_moves.append((position[0], 2))
-        if can_right_castle(board, position, self.color,self.has_move):
+        if can_right_castle(board, position, self.color, self.has_move):
             castle_moves.append((position[0], 6))
-        return super().get_safe_moves(board, position)+castle_moves 
-    
+
+        return super().get_safe_moves(board, position) + castle_moves

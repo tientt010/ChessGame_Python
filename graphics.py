@@ -3,48 +3,46 @@ import random
 from config import *
 from scipy.ndimage import gaussian_filter
 from moviepy.editor import VideoFileClip
-from PIL import Image, ImageSequence
-from logic.board import Board
 from threading import Thread
 
-
-pygame.init()
 class Graphics:
-    def __init__(self, board):
-        self.board = board
-        self.font = pygame.font.Font(None, 24) #font dùng để hiển thị
-
+    # Khởi tạo lớp Graphics với các thuộc tính cơ bản.
+    def __init__(self, board, title):
+        self.board = board  # Bảng cờ
+        self.font = pygame.font.Font(None, 24)  # Font mặc định
         self.window = pygame.display.set_mode((WIDTH + 200, HEIGHT), pygame.DOUBLEBUF | pygame.SRCALPHA)
-        pygame.display.set_caption("Chess Game")
-        self.load_images()
-        self.clock = pygame.time.Clock()
-        self.font = pygame.font.SysFont(None, 24)
-        self.running = True
-        # self.screen = pygame.display.set_mode((800, 800))
-        self.draw_initial_board()
-        self.font = pygame.font.Font(None, 24) # Font chữ để hiển thị quân cờ
+        pygame.display.set_caption(title)  # Tiêu đề cửa sổ
+        self.load_images()  # Tải các hình ảnh quân cờ
+        self.clock = pygame.time.Clock()  # Đối tượng clock của pygame
+        self.running = True  # Trạng thái game
+        self.draw_initial_board()  # Vẽ bàn cờ ban đầu
 
+    # Tải dữ liệu (hình ảnh)
     def load_images(self):
+        """
+        Tải và điều chỉnh kích thước các hình ảnh quân cờ.
+        """
         self.images = {}
         pieces = ['wP', 'bP', 'wR', 'bR', 'wN', 'bN', 'wB', 'bB', 'wQ', 'bQ', 'wK', 'bK']
         for piece in pieces:
-            # Tải hình ảnh và áp dụng convert_alpha() để hỗ trợ độ nét và trong suốt
             original_image = pygame.image.load(IMAGE_PATH + piece + ".png").convert_alpha()
-            # Chỉnh kích thước để vừa với ô vuông trên bàn cờ
             self.images[piece] = pygame.transform.smoothscale(
                 original_image, (SQUARE_SIZE, SQUARE_SIZE)
             )
 
-    def draw_board(self,pos = None):
+    # Vẽ bàn cờ và quân cờ
+    def draw_board(self, pos=None):
+        # Vẽ bàn cờ với các ô vuông xen kẽ màu.
         colors = [LIGHT_BROWN, DARK_BROWN]
         for row in range(ROWS):
             for col in range(COLS):
                 color = colors[(row + col) % 2]
                 pygame.draw.rect(self.window, color, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-        if pos!=None :
+        if pos is not None:
             row, col = pos
             pygame.draw.rect(self.window, RED, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
+    # Vẽ quân cờ trên bàn cờ
     def draw_pieces(self):
         for row in range(ROWS):
             for col in range(COLS):
@@ -55,58 +53,28 @@ class Graphics:
                     if piece.__class__.__name__ == "Knight":
                         piece_name = color + 'N'
                     self.window.blit(self.images[piece_name], (col * SQUARE_SIZE, row * SQUARE_SIZE))
-    def draw_update(self, is_capture, current="w", pos=None):
-        self.draw_board(pos)
-        self.draw_pieces()
-        pygame.display.flip()
-        if is_capture :
-            show_icon_thread = Thread(target=self.show_icon(current), daemon=True)
-            show_icon_thread.start()
 
+    # Vẽ bàn cờ ban đầu và khu vực thời gian
     def draw_initial_board(self):
         self.draw_board()
         self.draw_pieces()
-        black_rect = pygame.Rect(WIDTH, 0, 200, HEIGHT // 2)  # Nửa trên
-        white_rect = pygame.Rect(WIDTH, HEIGHT // 2, 200, HEIGHT // 2)  # Nửa dưới
+        # Vẽ khu vực đồng hồ
+        black_rect = pygame.Rect(WIDTH, 0, 200, HEIGHT // 2)
+        white_rect = pygame.Rect(WIDTH, HEIGHT // 2, 200, HEIGHT // 2)
         pygame.draw.rect(self.window, (0, 0, 0), black_rect)
         pygame.draw.rect(self.window, (255, 255, 255), white_rect)
         pygame.display.flip()
 
-    
+    # Cập nhật bàn cờ sau mỗi nước đi
+    def draw_update(self, is_capture, current="w", pos=None):
+        self.draw_board(pos)
+        self.draw_pieces()
+        pygame.display.flip()
+        if is_capture:
+            show_icon_thread = Thread(target=self.show_icon(current), daemon=True)
+            show_icon_thread.start()
 
-    def draw_timer_box(self, height = HEIGHT//2):
-        white_timer_rect = pygame.Rect(WIDTH, HEIGHT-height, 200, height)    
-        pygame.draw.rect(self.window, (255, 255, 255), white_timer_rect)  # Nền màu trắng
-
-        black_timer_rect = pygame.Rect(WIDTH, 0, 200, height)
-        pygame.draw.rect(self.window, (0, 0, 0), black_timer_rect)  # Nền màu đen
-
-    def draw_timers(self, time_white, time_black):
-        # Vẽ lại các hộp đồng hồ trước khi vẽ thời gian
-        self.draw_timer_box(150)
-
-        # Phông chữ nhỏ hơn cho đồng hồ
-        small_font = pygame.font.SysFont(None, 50)  # Đặt kích thước phông chữ nhỏ hơn cho phù hợp với ô đồng hồ
-
-        # Tạo text thời gian cho quân trắng và đen
-        white_time_text = small_font.render(f"{time_white // 60}:{time_white % 60:02}", True, (0, 0, 0))
-        black_time_text = small_font.render(f"{time_black // 60}:{time_black % 60:02}", True, (255, 255, 255))
-
-        # Đặt vị trí text thời gian để căn giữa trong các ô đồng hồ
-        white_text_rect = white_time_text.get_rect(center=(WIDTH + 100, HEIGHT - 100))  
-        black_text_rect = black_time_text.get_rect(center=(WIDTH + 100, 100))            
-        # white_text_rect = white_time_text.get_rect(midbottom=(WIDTH + 100, HEIGHT - 20))  
-        # black_text_rect = black_time_text.get_rect(midtop=(WIDTH + 100, 20))
-        # Vẽ text lên cửa sổ
-        self.window.blit(white_time_text, white_text_rect)
-        self.window.blit(black_time_text, black_text_rect)
-
-        # Cập nhật phần hiển thị của các ô đồng hồ
-        pygame.display.update(WIDTH, 0, 200, HEIGHT)
-      
-        
-
-
+    # Highlight ô vuông hoặc các nước đi hợp lệ.
     def highlight_square(self, position, highlight_type='piece'):
         if position:
             row, col = position
@@ -118,22 +86,24 @@ class Graphics:
                                 (col * SQUARE_SIZE + SQUARE_SIZE // 2, row * SQUARE_SIZE + SQUARE_SIZE // 2),
                                 SQUARE_SIZE // 4)
             pygame.display.flip()
-
+    
+    # Lấy vị trí ô vuông đang được con trỏ chuột trỏ vào.
     def get_square_under_mouse(self, mouse_pos):
         x, y = mouse_pos
         row = y // SQUARE_SIZE
         col = x // SQUARE_SIZE
-        if col >= COLS or row >= ROWS:  # Kiểm tra ngoài phạm vi
+        if col >= COLS or row >= ROWS:
             return None
         return row, col
 
-
+    # Hiển thị icon trạng thái dựa vào lượt đi.
     def show_icon(self, current_turn):
         if current_turn == 'b':
             self.show_status(WIDTH + 50, HEIGHT // 2 + 50, 'happy', WIDTH + 50, HEIGHT // 2 - 150, 'sad')
         else:
             self.show_status(WIDTH + 50, HEIGHT // 2 + 50, 'sad', WIDTH + 50, HEIGHT // 2 - 150, 'happy')
-
+    
+    # Hiển thị icon trạng thái (happy hoặc bad)
     def show_status(self, x1, y1, status1, x2, y2, status2):
         gif_index1 = random.randrange(1, 5 if status1 == 'happy' else 9)  # Chọn ngẫu nhiên một trong các file GIF đầu tiên
         gif_index2 = random.randrange(1, 5 if status2 == 'happy' else 9)  # Chọn ngẫu nhiên một trong các file GIF thứ hai
@@ -168,13 +138,14 @@ class Graphics:
             pygame.display.update(x2, y2, 100, 100)
 
             # Kết thúc sau 3 giây
-            if pygame.time.get_ticks() - start_ticks >= 1000:
+            if pygame.time.get_ticks() - start_ticks >= 1500:
                 running = False
 
         # Đóng các clip sau khi hiển thị
         clip1.close()
         clip2.close()
 
+    # Hiển thị kết quả sau khi kết thúc trò chơi
     def show_result(self, result, message, color=(0, 0, 255)):
         pygame.time.wait(3000)
         gif_path = 'images/' + result + ".gif"
@@ -267,17 +238,40 @@ class Graphics:
 
         clip.close()
         return check
+    
+    # Vẽ khung hiển thị của đồng hồ của 2 bên
+    def draw_timer_box(self, height = HEIGHT//2):
+        white_timer_rect = pygame.Rect(WIDTH, HEIGHT-height, 200, height)    
+        pygame.draw.rect(self.window, (255, 255, 255), white_timer_rect)  # Nền màu trắng
 
+        black_timer_rect = pygame.Rect(WIDTH, 0, 200, height)
+        pygame.draw.rect(self.window, (0, 0, 0), black_timer_rect)  # Nền màu đen
 
+    # Vẽ thời gian cho hai người chơi
+    def draw_timers(self, time_white, time_black):
+        # Vẽ lại các hộp đồng hồ trước khi vẽ thời gian
+        self.draw_timer_box(150)
 
+        # Phông chữ nhỏ hơn cho đồng hồ
+        small_font = pygame.font.SysFont(None, 50)  # Đặt kích thước phông chữ nhỏ hơn cho phù hợp với ô đồng hồ
 
+        # Tạo text thời gian cho quân trắng và đen
+        white_time_text = small_font.render(f"{time_white // 60}:{time_white % 60:02}", True, (0, 0, 0))
+        black_time_text = small_font.render(f"{time_black // 60}:{time_black % 60:02}", True, (255, 255, 255))
+
+        # Đặt vị trí text thời gian để căn giữa trong các ô đồng hồ
+        white_text_rect = white_time_text.get_rect(center=(WIDTH + 100, HEIGHT - 100))  
+        black_text_rect = black_time_text.get_rect(center=(WIDTH + 100, 100))            
+
+        # Vẽ text lên cửa sổ
+        self.window.blit(white_time_text, white_text_rect)
+        self.window.blit(black_time_text, black_text_rect)
+
+        # Cập nhật phần hiển thị của các ô đồng hồ
+        pygame.display.update(WIDTH, 0, 200, HEIGHT)
+    
+    # Áp dụng Gaussian Blur lên bề mặt
     def apply_gaussian_blur(self, surface, sigma=5):
-        """
-        Áp dụng Gaussian Blur lên một bề mặt pygame.
-        :param surface: Bề mặt cần làm mờ.
-        :param sigma: Độ mạnh của Gaussian Blur.
-        :return: Bề mặt đã được làm mờ.
-        """
         # Chuyển bề mặt thành mảng numpy
         array = pygame.surfarray.pixels3d(surface).copy()
 

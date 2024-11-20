@@ -1,8 +1,11 @@
+import pygame
 from game.game_manager import Game_Manager
 from game.game_offline import Game_offline  
 from game.game_bot import Game_bot
 
 def main():
+    pygame.init()
+
     # Hiển thị phần Menu game
     game = game_menu()
     while game:
@@ -15,6 +18,8 @@ def main():
             game = game_menu()
         else:
             break
+    
+    pygame.quit()
 
 def game_menu():
     settings = Game_Manager()

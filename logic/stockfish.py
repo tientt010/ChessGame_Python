@@ -20,7 +20,7 @@ class StockfishEngine:
             self.stockfish_writer = self.stockfish_process.stdin
             return True
         except Exception as e:
-            print(f"Error starting Stockfish: {e}")
+            print(f"Lỗi khởi tạo stockfish: {e}")
             return False
 
     # Gửi lệnh tới Stockfish
@@ -29,7 +29,7 @@ class StockfishEngine:
             self.stockfish_writer.write(command + '\n')
             self.stockfish_writer.flush()
         except Exception as e:
-            print(f"Error sending command: {e}")
+            print(f"Gửi lệnh thất bại: {e}")
 
     # Đọc phản hồi từ Stockfish
     def read_output(self):
@@ -42,7 +42,7 @@ class StockfishEngine:
                     break
             return output
         except Exception as e:
-            print(f"Error reading output: {e}")
+            print(f"Không nhận được phản hồi: {e}")
             return None
 
     # Xử lý trường hợp gửi hàng loạt các nước đi từ trước tới giờ
@@ -55,7 +55,7 @@ class StockfishEngine:
 
     # Lấy nước đi tốt nhất từ vị trí hiện tại
     def get_best_move(self):
-        self.send_command("go movetime 1000")  # Phân tích trong 1 giây
+        self.send_command("go movetime 1000")   # Phân tích trong 1 giây
         output = self.read_output()
         for line in output:
             if line.startswith("bestmove"):
@@ -68,11 +68,10 @@ class StockfishEngine:
             self.send_command("quit")
             self.stockfish_process.terminate()
         except Exception as e:
-            print(f"Error stopping Stockfish: {e}")
+            print(f"Xảy ra lỗi khi dừng stockfish: {e}")
 
     # Demo chơi với bot dưới dạng dòng lệnh
     def run_cli_game(self):
-        print("Start playing with Stockfish. Type 'end' to stop.")
         try:
             moves = []
             while True:
@@ -86,11 +85,3 @@ class StockfishEngine:
                 moves.append(best_move)
         finally:
             self.stop()
-
-
-if __name__ == "__main__":
-    client = StockfishEngine()
-    if client.start():
-        client.run_cli_game()
-    else:
-        print("Failed to start Stockfish.")

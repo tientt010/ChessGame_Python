@@ -3,133 +3,69 @@ from graphics import Graphics
 import pygame
 from config import *
 from logic.stockfish import StockfishEngine
-import threading
 
 class Game_bot:
+    # Khởi tạo trạng thái ban đầu cho game
     def __init__(self):
         self.board = Board()
-        self.graphics = Graphics(self.board)
-        self.selected_square = None
-        self.valid_moves = []
-        self.game_end = False
-        # Âm thanh trò chơi
-        self.move_sound = pygame.mixer.Sound("sounds/move.wav")
-        self.select_sound = pygame.mixer.Sound("sounds/capture.wav")
-        self.stockfish = StockfishEngine()
-        self.is_capture = False
-        self.option = -1
-        self.highlight_king = None
-    
-    # Thêm mới sư kiện end_game
-    def end_game(self, result):
-        if result == "win":
-            message = 'Player win!' if self.board.current_turn == 'b' else 'Player Lose!'
-            result = 'win_bot' if self.board.current_turn == 'b' else 'lose_bot'
-        elif result == "draw":
-            message = "Draw!"
-        else:
-            message = "Unknown result"
-        
-        self.option = self.graphics.show_result(result,message)
-        self.graphics.running = False
-        self.game_end = True
-        self.stockfish.stop()
-        
-    def play_turn(self, current_turn, start_pos=None, end_pos=None):
-        if current_turn == 'bot':
-            self.stockfish.set_position(self.board.move_list)
-            turn_bot = self.stockfish.get_best_move()
-            start_pos = (8 - int(turn_bot[1]), ord(turn_bot[0]) - ord('a'))
-            end_pos = (8 - int(turn_bot[3]), ord(turn_bot[2]) - ord('a'))
-        
-        if current_turn == 'bot' or end_pos in self.valid_moves:
-            captured_piece = self.board.get_piece(end_pos) # Kiểm tra nếu có quân cờ bị ăn
-            if captured_piece:
-                self.is_capture = True
-            self.board.move_piece(start_pos, end_pos)
-            self.move_sound.play()
-            self.valid_moves = []
-            self.switch_turn()
-            self.highlight_king = self.board.find_king() if self.board.is_check() else None
-            self.graphics.draw_update(self.is_capture,self.board.current_turn, self.highlight_king)
-            if self.is_capture :
-                self.graphics.draw_timer_box()
-            self.is_capture=False
-            check_mate = self.board.is_checkmate(self.board.current_turn)
-            if check_mate!= 'ongoing':
-                if check_mate == "win":
-                    self.end_game("win")
-                else:
-                    self.end_game("draw")
-                return True
-            if current_turn == 'player' and self.graphics.running:
-                return self.play_turn('bot')
-        return False
+        self.graphics = Graphics(self.board, "Single Player Mode")
+        self.selected_square = None 
+        self.valid_moves = [] 
+        self.game_end = False 
+        self.stockfish = StockfishEngine()  # Đối tượng Stockfish để chơi với bot
+        self.move_sound = pygame.mixer.Sound("sounds/move.wav")  
+        self.select_sound = pygame.mixer.Sound("sounds/capture.wav")  
+        self.is_capture = False  
+        self.option = -1 
+        self.highlight_king = None 
 
-
-    def switch_turn(self):
-        self.board.current_turn = 'b' if self.board.current_turn == 'w' else 'w'
-
+    # Hàm chính, chạy vòng lặp game
     def start(self):
         clock = pygame.time.Clock()
         running = True
 
-
-        if not self.stockfish.start():
+        # Kiểm tra khởi động Stockfish
+        if not self.stockfish.start():  
             print("Error: Failed to start Stockfish.")
             return
 
         while running:
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
+                if event.type == pygame.QUIT:  # Người dùng đóng cửa sổ
                     running = False
                     self.game_end = True
-                elif event.type == pygame.MOUSEBUTTONDOWN:
+                elif event.type == pygame.MOUSEBUTTONDOWN:  # Người dùng nhấn chuột
                     mouse_pos = pygame.mouse.get_pos()
                     clicked_square = self.graphics.get_square_under_mouse(mouse_pos)
 
                     if clicked_square:
-                        if self.selected_square:
-                            # Xóa highlight của quân cờ trước đó bằng cách vẽ lại bàn cờ
+                        if self.selected_square:  # Nếu ô cờ đã được chọn trước đó
                             self.graphics.draw_update(self.is_capture, self.board.current_turn, self.highlight_king)
-                            self.is_capture=False
-
-                            # Nếu đã chọn quân cờ, cố gắng di chuyển
-                            if clicked_square in self.valid_moves:
+                            self.is_capture = False
+                            if clicked_square in self.valid_moves:  # Di chuyển hợp lệ
                                 if self.play_turn('player', self.selected_square, clicked_square):
                                     running = False
-                                    self.game_end = True
-                                    if self.option ==2 :
-                                        return 2
-                                    elif self.option ==1:
-                                        return 0
-                                    else :
-                                        return -1
+                                    return self.option
                                 self.selected_square = None
-                            else:
-                                # Nếu nhấp vào ô không hợp lệ, chọn lại quân cờ mới
+                            else:  # Chọn lại quân cờ
                                 self.select_piece(clicked_square)
-                        else:
-                            # Chọn quân cờ ban đầu
+                        else:  # Chọn quân cờ ban đầu
                             self.select_piece(clicked_square)
 
-                        # Highlight quân cờ và các ô hợp lệ
+                        # Highlight ô cờ và nước đi hợp lệ
                         if self.selected_square:
                             self.graphics.highlight_square(self.selected_square, 'piece')
                         for move in self.valid_moves:
                             self.graphics.highlight_square(move, 'move')
                         pygame.display.flip()
+
             pygame.display.update(800, 0, 200, 800)
             clock.tick(FPS)
-        if self.option ==2 :
-            return 2
-        elif self.option ==1:
-            return 0
-        else :
-            return -1
-        # pygame.quit()
+
+        return self.option
 
     def select_piece(self, position):
+        # Chọn quân cờ tại vị trí được nhấp chuột
         piece = self.board.get_piece(position)
         if piece and piece.get_color() == self.board.current_turn:
             self.selected_square = position
@@ -138,10 +74,51 @@ class Game_bot:
         else:
             self.selected_square = None
             self.valid_moves = []
-if __name__ == "__main__":
-    try:
-        game = Game_bot()
-        game.start()
-    except Exception as e:
-        print(f"Error: {e}")
 
+    def play_turn(self, current_turn, start_pos=None, end_pos=None):
+        # Thực hiện lượt đi của người chơi hoặc bot
+        if current_turn == 'bot':  # Bot chọn nước đi
+            self.stockfish.set_position(self.board.move_list)
+            bot_move = self.stockfish.get_best_move()
+            start_pos = (8 - int(bot_move[1]), ord(bot_move[0]) - ord('a'))
+            end_pos = (8 - int(bot_move[3]), ord(bot_move[2]) - ord('a'))
+
+        # Thực hiện di chuyển quân cờ
+        if self.board.get_piece(end_pos):  # Kiểm tra nếu có quân cờ bị ăn
+            self.is_capture = True
+        self.board.move_piece(start_pos, end_pos)  # Di chuyển quân cờ
+        self.move_sound.play()
+        self.valid_moves = []
+        self.switch_turn()  # Chuyển lượt
+        self.highlight_king = self.board.find_king() if self.board.is_check() else None
+        self.graphics.draw_update(self.is_capture, self.board.current_turn, self.highlight_king)
+        if self.is_capture:
+            self.graphics.draw_timer_box()
+        self.is_capture = False
+        check_mate = self.board.is_checkmate(self.board.current_turn)
+        if check_mate != 'ongoing':  # Trò chơi kết thúc
+            self.end_game("win" if check_mate == "win" else "draw")
+            return True
+        if current_turn == 'player' and self.graphics.running:  # Bot tiếp tục lượt
+            return self.play_turn('bot')
+
+        return False
+
+    # Chuyển lượt chơi
+    def switch_turn(self):
+        self.board.current_turn = 'b' if self.board.current_turn == 'w' else 'w'
+
+    # Kết thúc trò chơi và hiển thị kết quả
+    def end_game(self, result):
+        if result == "win":
+            message = 'Player win!' if self.board.current_turn == 'b' else 'Player Lose!'
+            result = 'win_bot' if self.board.current_turn == 'b' else 'lose_bot'
+        elif result == "draw":
+            message = "Draw!"
+        else:
+            message = "Unknown result"
+
+        self.option = self.graphics.show_result(result, message)
+        self.graphics.running = False
+        self.game_end = True
+        self.stockfish.stop()
