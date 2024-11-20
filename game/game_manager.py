@@ -1,6 +1,8 @@
 import pygame
 from config import *
 
+import pygame
+
 class Game_Manager:
     def __init__(self):
         
