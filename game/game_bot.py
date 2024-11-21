@@ -86,7 +86,7 @@ class Game_bot:
         # Thực hiện di chuyển quân cờ
         if self.board.get_piece(end_pos):  # Kiểm tra nếu có quân cờ bị ăn
             self.is_capture = True
-        self.board.move_piece(start_pos, end_pos, current_turn == 'bot')  # Di chuyển quân cờ
+        self.board.move_piece(start_pos, end_pos, is_turn_bot=(current_turn=='bot'))  # Di chuyển quân cờ
         self.move_sound.play()
         self.valid_moves = []
         self.switch_turn()  # Chuyển lượt
