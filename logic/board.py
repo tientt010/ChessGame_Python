@@ -62,7 +62,7 @@ class Board:
         return isinstance(piece, King)
 
     # Hàm chính di chuyển quân cờ (logic)
-    def move_piece(self, start_pos, end_pos, fake_move=False):
+    def move_piece(self, start_pos, end_pos, fake_move=False, is_turn_bot=False):
         # Di chuyển quân cờ từ vị trí start_pos đến end_pos
         piece = self.get_piece(start_pos)
         self.board[end_pos[0]][end_pos[1]].set_piece(piece)
@@ -81,7 +81,7 @@ class Board:
         if fake_move:
             return
 
-        self.move_list.append(self.move_to_string(start_pos, end_pos))
+        if not is_turn_bot: self.move_list.append(self.move_to_string(start_pos, end_pos))
         if isinstance(piece, (King, Rook)):
             piece.has_move = True
 
@@ -143,3 +143,6 @@ class Board:
     def move_to_string(self, start_pos, end_pos):
         # Chuyển nước đi thành chuỗi
         return chr(ord('a') + start_pos[1]) + str(8 - start_pos[0]) + chr(ord('a') + end_pos[1]) + str(8 - end_pos[0])
+
+    def add_bot_move(self, move):
+        self.move_list.append(move)

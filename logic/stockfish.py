@@ -27,7 +27,7 @@ class StockfishEngine:
     def send_command(self, command):
         try:
             self.stockfish_writer.write(command + '\n')
-            self.stockfish_writer.flush()
+            self.stockfish_writer.flush()                   # Đảm bảo stockfish nhận được lệnh ngay lập tức
         except Exception as e:
             print(f"Gửi lệnh thất bại: {e}")
 
@@ -85,3 +85,6 @@ class StockfishEngine:
                 moves.append(best_move)
         finally:
             self.stop()
+# stockfish = StockfishEngine()
+# stockfish.start()
+# stockfish.run_cli_game()

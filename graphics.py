@@ -19,9 +19,6 @@ class Graphics:
 
     # Tải dữ liệu (hình ảnh)
     def load_images(self):
-        """
-        Tải và điều chỉnh kích thước các hình ảnh quân cờ.
-        """
         self.images = {}
         pieces = ['wP', 'bP', 'wR', 'bR', 'wN', 'bN', 'wB', 'bB', 'wQ', 'bQ', 'wK', 'bK']
         for piece in pieces:
@@ -30,7 +27,7 @@ class Graphics:
                 original_image, (SQUARE_SIZE, SQUARE_SIZE)
             )
 
-    # Vẽ bàn cờ và quân cờ
+    # Vẽ bàn cờ
     def draw_board(self, pos=None):
         # Vẽ bàn cờ với các ô vuông xen kẽ màu.
         colors = [LIGHT_BROWN, DARK_BROWN]
@@ -102,6 +99,7 @@ class Graphics:
             self.show_status(WIDTH + 50, HEIGHT // 2 + 50, 'happy', WIDTH + 50, HEIGHT // 2 - 150, 'sad')
         else:
             self.show_status(WIDTH + 50, HEIGHT // 2 + 50, 'sad', WIDTH + 50, HEIGHT // 2 - 150, 'happy')
+        self.draw_timer_box()
     
     # Hiển thị icon trạng thái (happy hoặc bad)
     def show_status(self, x1, y1, status1, x2, y2, status2):
@@ -137,7 +135,7 @@ class Graphics:
             pygame.display.update(x1, y1, 100, 100)
             pygame.display.update(x2, y2, 100, 100)
 
-            # Kết thúc sau 3 giây
+            # Kết thúc sau 1,5 giây
             if pygame.time.get_ticks() - start_ticks >= 1500:
                 running = False
 
@@ -204,14 +202,14 @@ class Graphics:
 
         # Vòng lặp hiển thị
         clock = pygame.time.Clock()
-        check = 2
+        option = 2
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    check = handle_button_click()
-                    if check:
+                    option = handle_button_click()
+                    if option:
                         running = False
 
             # Tính toán frame hiện tại
@@ -234,10 +232,10 @@ class Graphics:
             draw_button(self.window, "Exit", exit_button, (128, 0, 0), (255, 0, 0))
 
             pygame.display.update()
-            clock.tick(30)  # Giới hạn 30 FPS
+            clock.tick(FPS)
 
         clip.close()
-        return check
+        return option
     
     # Vẽ khung hiển thị của đồng hồ của 2 bên
     def draw_timer_box(self, height = HEIGHT//2):

@@ -16,7 +16,7 @@ class Game_bot:
         self.move_sound = pygame.mixer.Sound("sounds/move.wav")  
         self.select_sound = pygame.mixer.Sound("sounds/capture.wav")  
         self.is_capture = False  
-        self.option = -1 
+        self.option_endgame = -1 
         self.highlight_king = None 
 
     # Hàm chính, chạy vòng lặp game
@@ -45,7 +45,7 @@ class Game_bot:
                             if clicked_square in self.valid_moves:  # Di chuyển hợp lệ
                                 if self.play_turn('player', self.selected_square, clicked_square):
                                     running = False
-                                    return self.option
+                                    return self.option_endgame
                                 self.selected_square = None
                             else:  # Chọn lại quân cờ
                                 self.select_piece(clicked_square)
@@ -61,8 +61,7 @@ class Game_bot:
 
             pygame.display.update(800, 0, 200, 800)
             clock.tick(FPS)
-
-        return self.option
+        return self.option_endgame
 
     def select_piece(self, position):
         # Chọn quân cờ tại vị trí được nhấp chuột
@@ -80,13 +79,14 @@ class Game_bot:
         if current_turn == 'bot':  # Bot chọn nước đi
             self.stockfish.set_position(self.board.move_list)
             bot_move = self.stockfish.get_best_move()
+            self.board.add_bot_move(bot_move)
             start_pos = (8 - int(bot_move[1]), ord(bot_move[0]) - ord('a'))
             end_pos = (8 - int(bot_move[3]), ord(bot_move[2]) - ord('a'))
 
         # Thực hiện di chuyển quân cờ
         if self.board.get_piece(end_pos):  # Kiểm tra nếu có quân cờ bị ăn
             self.is_capture = True
-        self.board.move_piece(start_pos, end_pos)  # Di chuyển quân cờ
+        self.board.move_piece(start_pos, end_pos, current_turn == 'bot')  # Di chuyển quân cờ
         self.move_sound.play()
         self.valid_moves = []
         self.switch_turn()  # Chuyển lượt
@@ -99,7 +99,7 @@ class Game_bot:
         if check_mate != 'ongoing':  # Trò chơi kết thúc
             self.end_game("win" if check_mate == "win" else "draw")
             return True
-        if current_turn == 'player' and self.graphics.running:  # Bot tiếp tục lượt
+        if current_turn == 'player' and self.graphics.running:  # Đến lượt của bot
             return self.play_turn('bot')
 
         return False
@@ -118,7 +118,7 @@ class Game_bot:
         else:
             message = "Unknown result"
 
-        self.option = self.graphics.show_result(result, message)
+        self.option_endgame =0 if self.graphics.show_result(result, message) ==1 else 2
         self.graphics.running = False
         self.game_end = True
         self.stockfish.stop()

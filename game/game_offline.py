@@ -20,7 +20,7 @@ class Game_offline:
         self.move_sound = pygame.mixer.Sound("sounds/move.wav")  # Âm thanh di chuyển
         self.select_sound = pygame.mixer.Sound("sounds/capture.wav")  # Âm thanh chọn quân
         self.is_capture = False  # Trạng thái có quân bị ăn
-        self.option = -1  # Lựa chọn kết thúc game
+        self.option_endgame = -1  # Lựa chọn kết thúc game
 
     # Vòng lặp chính để xử lý trò chơi
     def start(self):
@@ -64,12 +64,11 @@ class Game_offline:
 
                         pygame.display.update(0, 0, WIDTH, HEIGHT)
 
-            self.graphics.draw_timer_box()  # Vẽ khung thời gian
             self.graphics.draw_timers(self.time_white, self.time_black)  # Hiển thị thời gian còn lại
             pygame.display.update(800, 0, 200, 800)
             clock.tick(FPS)
 
-        return self.option
+        return self.option_endgame
     
     # Chọn quân cờ tại vị trí được click và tính toán nước đi hợp lệ
     def select_piece(self, position):
@@ -86,7 +85,7 @@ class Game_offline:
     def play_turn(self, start_pos, end_pos):
         captured_piece = self.board.get_piece(end_pos)  # Kiểm tra quân bị ăn
         self.is_capture = bool(captured_piece)
-        self.board.move_piece(start_pos, end_pos)  # Di chuyển quân cờ
+        self.board.move_piece(start_pos, end_pos)  # Di chuyển quân cờ(logic)
         self.move_sound.play()
         self.valid_moves = []
         self.switch_turn()  # Chuyển lượt
@@ -117,11 +116,13 @@ class Game_offline:
                 if self.time_white <= 0:
                     self.time_white = 0
                     self.game_end = True
+                    self.end_game('win')
             else:
                 self.time_black -= elapsed_time
                 if self.time_black <= 0:
                     self.time_black = 0
                     self.game_end = True
+                    self.end_game('win')
 
             self.turn_start_time = current_time
             pygame.time.wait(1000)
@@ -137,4 +138,4 @@ class Game_offline:
 
         self.graphics.running = False
         self.game_end = True
-        self.option = self.graphics.show_result(result, message, WHITE if self.board.current_turn == 'b' else BLACK)
+        self.option_endgame = self.graphics.show_result(result, message, WHITE if self.board.current_turn == 'b' else BLACK)

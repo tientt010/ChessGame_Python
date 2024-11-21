@@ -18,7 +18,6 @@ def main():
             game = game_menu()
         else:
             break
-    
     pygame.quit()
 
 def game_menu():
