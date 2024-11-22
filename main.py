@@ -9,7 +9,7 @@ def main():
     # Hiển thị phần Menu game
     game = game_menu()
     while game:
-        op = game.start()  # Bắt đầu game với chế độ đã chọn
+        op = game.start()  
         if op == 0:
             game = Game_bot()
         elif op == 1:

@@ -55,7 +55,7 @@ class StockfishEngine:
 
     # Lấy nước đi tốt nhất từ vị trí hiện tại
     def get_best_move(self):
-        self.send_command("go movetime 1000")   # Phân tích trong 1 giây
+        self.send_command("go depth 20")   
         output = self.read_output()
         for line in output:
             if line.startswith("bestmove"):
